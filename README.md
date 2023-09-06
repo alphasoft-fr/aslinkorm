@@ -1,7 +1,8 @@
 # ASLinkORM
 ASLinkORM  is a lightweight Object-Relational Mapping (ORM) library that allows you to interact with your database using object-oriented models. This library is designed to simplify the process of managing database records and relationships in your PHP application.
 
-[![Latest Stable Version](http://poser.pugx.org/alphasoft-fr/sql-manager/v)](https://packagist.org/packages/alphasoft-fr/sql-manager) [![Total Downloads](http://poser.pugx.org/alphasoft-fr/sql-manager/downloads)](https://packagist.org/packages/alphasoft-fr/sql-manager) [![Latest Unstable Version](http://poser.pugx.org/alphasoft-fr/sql-manager/v/unstable)](https://packagist.org/packages/alphasoft-fr/sql-manager) [![License](http://poser.pugx.org/alphasoft-fr/sql-manager/license)](https://packagist.org/packages/alphasoft-fr/sql-manager) [![PHP Version Require](http://poser.pugx.org/alphasoft-fr/sql-manager/require/php)](https://packagist.org/packages/alphasoft-fr/sql-manager)
+[![Latest Stable Version](http://poser.pugx.org/alphasoft-fr/aslinkorm/v)](https://packagist.org/packages/alphasoft-fr/aslinkorm) [![Total Downloads](http://poser.pugx.org/alphasoft-fr/aslinkorm/downloads)](https://packagist.org/packages/alphasoft-fr/aslinkorm) [![Latest Unstable Version](http://poser.pugx.org/alphasoft-fr/aslinkorm/v/unstable)](https://packagist.org/packages/alphasoft-fr/aslinkorm) [![License](http://poser.pugx.org/alphasoft-fr/aslinkorm/license)](https://packagist.org/packages/alphasoft-fr/aslinkorm) [![PHP Version Require](http://poser.pugx.org/alphasoft-fr/aslinkorm/require/php)](https://packagist.org/packages/alphasoft-fr/aslinkorm)
+
 ## Installation
 Use [Composer](https://getcomposer.org/)
 
