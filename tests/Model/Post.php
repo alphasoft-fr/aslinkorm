@@ -1,11 +1,11 @@
 <?php
 
-namespace Test\AlphaSoft\Sql\Model;
+namespace Test\AlphaSoft\AsLinkOrm\Model;
 
-use AlphaSoft\Sql\Mapping\Column;
-use AlphaSoft\Sql\Mapping\PrimaryKeyColumn;
-use AlphaSoft\Sql\Relation\HasEntity;
-use Test\AlphaSoft\Sql\Repository\PostRepository;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
+use AlphaSoft\AsLinkOrm\Entity\HasEntity;
+use Test\AlphaSoft\AsLinkOrm\Repository\PostRepository;
 
 final class Post extends HasEntity
 {

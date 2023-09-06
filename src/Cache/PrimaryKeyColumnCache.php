@@ -1,8 +1,8 @@
 <?php
 
-namespace AlphaSoft\Sql\Cache;
+namespace AlphaSoft\AsLinkOrm\Cache;
 
-use AlphaSoft\Sql\Mapping\PrimaryKeyColumn;
+use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 
 final class PrimaryKeyColumnCache
 {

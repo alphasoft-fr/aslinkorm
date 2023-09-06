@@ -1,9 +1,9 @@
 <?php
 
-namespace Test\AlphaSoft\Sql\Repository;
+namespace Test\AlphaSoft\AsLinkOrm\Repository;
 
-use AlphaSoft\Sql\Repository\Repository;
-use Test\AlphaSoft\Sql\Model\User;
+use AlphaSoft\AsLinkOrm\Repository\Repository;
+use Test\AlphaSoft\AsLinkOrm\Model\User;
 
 class UserRepository extends Repository
 {

@@ -1,16 +1,16 @@
 <?php
 
-namespace AlphaSoft\Sql\Repository;
+namespace AlphaSoft\AsLinkOrm\Repository;
 
 use AlphaSoft\DataModel\Model;
 use AlphaSoft\DataModel\Factory\ModelFactory;
-use AlphaSoft\Sql\DoctrineManager;
-use AlphaSoft\Sql\Mapping\Column;
-use AlphaSoft\Sql\Relation\HasEntity;
+use AlphaSoft\AsLinkOrm\DoctrineManager;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Entity\HasEntity;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Test\AlphaSoft\Sql\Model\Post;
 
 abstract class Repository
 {
@@ -148,7 +148,7 @@ abstract class Repository
     {
         foreach ($arguments as $property => $value) {
             if (is_array($value)) {
-                $query->andWhere($query->expr()->in($property, $query->createPositionalParameter($value, ArrayParameterType::STRING)));
+                $query->andWhere($query->expr()->in($property, $query->createPositionalParameter($value, Connection::PARAM_STR_ARRAY)));
                 continue;
             }
             $query->andWhere($property . ' = ' . $query->createPositionalParameter($value));

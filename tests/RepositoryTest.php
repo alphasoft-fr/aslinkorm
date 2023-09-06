@@ -1,14 +1,14 @@
 <?php
 
-namespace Test\AlphaSoft\Sql;
+namespace Test\AlphaSoft\AsLinkOrm;
 
-use AlphaSoft\Sql\DoctrineManager;
+use AlphaSoft\AsLinkOrm\DoctrineManager;
 use PDO;
 use PHPUnit\Framework\TestCase;
-use Test\AlphaSoft\Sql\Model\Post;
-use Test\AlphaSoft\Sql\Model\User;
-use Test\AlphaSoft\Sql\Repository\PostRepository;
-use Test\AlphaSoft\Sql\Repository\UserRepository;
+use Test\AlphaSoft\AsLinkOrm\Model\Post;
+use Test\AlphaSoft\AsLinkOrm\Model\User;
+use Test\AlphaSoft\AsLinkOrm\Repository\PostRepository;
+use Test\AlphaSoft\AsLinkOrm\Repository\UserRepository;
 
 class RepositoryTest extends TestCase
 {
@@ -124,6 +124,17 @@ class RepositoryTest extends TestCase
         $this->assertCount(1, $relatedPosts);
         $this->assertInstanceOf(Post::class, $relatedPosts[0]);
         $this->assertEquals('First Post', $relatedPosts[0]->get('title'));
+    }
+
+    public function testMultipleFind()
+    {
+        $this->insertTestData();
+
+        /**
+         * @var User $user
+         */
+        $users = $this->userRepository->findBy(['firstname' => ['John', 'Jane']]);
+        $this->assertCount(2, iterator_to_array($users, false));
     }
 
     public function testToDbWithDefaultColumnMapping()

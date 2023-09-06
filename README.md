@@ -37,7 +37,7 @@ To get started with ASLinkORM , you need to follow these steps:
 1. **Initialize the DoctrineManager:** In your application's entry point, initialize the `DoctrineManager` with your database configuration. Make sure to adjust the configuration according to your database setup.
 
 ```php
-use AlphaSoft\Sql\DoctrineManager;
+use AlphaSoft\AsLinkOrm\DoctrineManager;
 
 $config = [
      'url' => 'mysql://username:password@localhost/db_name',
@@ -50,7 +50,7 @@ $config = [
 2. **Create Repositories:** Create repository classes for your models by extending the `Repository` base class. Define the table name, model name, and selectable fields.
 
 ```php
-use AlphaSoft\Sql\Repository\Repository;
+use AlphaSoft\AsLinkOrm\Repository\Repository;
 
 class UserRepository extends Repository
 {
@@ -71,19 +71,19 @@ class UserRepository extends Repository
 3. **Create Models:** Create model classes by extending the `HasEntity` base class. Define relationships and any custom methods you need.
 
 ```php
-use AlphaSoft\Sql\Relation\HasEntity;
+use AlphaSoft\AsLinkOrm\Relation\HasEntity;
 
 class User extends HasEntity 
 {
     static protected function columnsMapping(): array
     {
         return [
-            new \AlphaSoft\Sql\Mapping\PrimaryKeyColumn('id'),
-            new \AlphaSoft\Sql\Mapping\Column('firstname'),
-            new \AlphaSoft\Sql\Mapping\Column('lastname'),
-            new \AlphaSoft\Sql\Mapping\Column('email'),
-            new \AlphaSoft\Sql\Mapping\Column('password'),
-            new \AlphaSoft\Sql\Mapping\Column('isActive', false, 'is_active'),
+            new \AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn('id'),
+            new \AlphaSoft\AsLinkOrm\Mapping\Column('firstname'),
+            new \AlphaSoft\AsLinkOrm\Mapping\Column('lastname'),
+            new \AlphaSoft\AsLinkOrm\Mapping\Column('email'),
+            new \AlphaSoft\AsLinkOrm\Mapping\Column('password'),
+            new \AlphaSoft\AsLinkOrm\Mapping\Column('isActive', false, 'is_active'),
         ];
     }
 
@@ -239,7 +239,7 @@ The `HasEntity` class offers two methods, `hasOne` and `hasMany`, which facilita
 The `hasOne` method establishes a one-to-one relationship between the current model and another related model. Here's an example of how you might use it:
 
 ```php
-use AlphaSoft\Sql\Relation\HasEntity;
+use AlphaSoft\AsLinkOrm\Entity\HasEntity;
 
 class User extends HasEntity
 {
@@ -259,7 +259,7 @@ In this scenario, the `getProfile` method sets up a one-to-one relationship betw
 The `hasMany` method establishes a one-to-many relationship between the current model and another related model. Consider this example:
 
 ```php
-use AlphaSoft\Sql\Relation\HasEntity;
+use AlphaSoft\AsLinkOrm\Entity\HasEntity;
 
 class User extends HasEntity
 {
@@ -307,7 +307,7 @@ ASLinkORM provides the ability to define column mappings for your models, giving
 The `Column` object is used within the `columnsMapping()` method to define how model attributes correspond to database columns. It allows you to specify a default value and an optional database column name if it differs from the attribute name in the model.
 
 ```php
-use AlphaSoft\Sql\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
 
 $column1 = new Column('firstname'); // Basic usage, no specific column name specified
 $column2 = new Column('lastname', 'Doe'); // Specifying a default value

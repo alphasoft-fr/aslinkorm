@@ -1,6 +1,6 @@
 <?php
 
-namespace AlphaSoft\Sql\Mapping;
+namespace AlphaSoft\AsLinkOrm\Mapping;
 
 final class PrimaryKeyColumn extends Column
 {

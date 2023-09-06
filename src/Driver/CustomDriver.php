@@ -1,6 +1,6 @@
 <?php
 
-namespace AlphaSoft\Sql\Driver;
+namespace AlphaSoft\AsLinkOrm\Driver;
 
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\PDO\Connection;

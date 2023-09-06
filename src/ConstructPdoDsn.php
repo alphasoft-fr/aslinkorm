@@ -1,6 +1,6 @@
 <?php
 
-namespace AlphaSoft\Sql;
+namespace AlphaSoft\AsLinkOrm;
 
 final class ConstructPdoDsn
 {

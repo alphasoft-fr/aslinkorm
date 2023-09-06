@@ -1,6 +1,6 @@
 <?php
 
-namespace AlphaSoft\Sql\Mapping;
+namespace AlphaSoft\AsLinkOrm\Mapping;
 
 class Column
 {

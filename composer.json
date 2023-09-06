@@ -14,8 +14,8 @@
   ],
   "autoload": {
     "psr-4": {
-      "AlphaSoft\\Sql\\": "src",
-      "Test\\AlphaSoft\\Sql\\": "tests"
+      "AlphaSoft\\AsLinkOrm\\": "src",
+      "Test\\AlphaSoft\\AsLinkOrm\\": "tests"
     }
   },
   "require": {

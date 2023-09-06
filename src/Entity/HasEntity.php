@@ -1,13 +1,13 @@
 <?php
 
-namespace AlphaSoft\Sql\Relation;
+namespace AlphaSoft\AsLinkOrm\Entity;
 
 use AlphaSoft\DataModel\Model;
-use AlphaSoft\Sql\Cache\ColumnCache;
-use AlphaSoft\Sql\Cache\PrimaryKeyColumnCache;
-use AlphaSoft\Sql\DoctrineManager;
-use AlphaSoft\Sql\Mapping\Column;
-use AlphaSoft\Sql\Mapping\PrimaryKeyColumn;
+use AlphaSoft\AsLinkOrm\Cache\ColumnCache;
+use AlphaSoft\AsLinkOrm\Cache\PrimaryKeyColumnCache;
+use AlphaSoft\AsLinkOrm\DoctrineManager;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use LogicException;
 use SplObjectStorage;
 

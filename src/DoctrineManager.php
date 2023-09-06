@@ -1,8 +1,8 @@
 <?php
 
-namespace AlphaSoft\Sql;
+namespace AlphaSoft\AsLinkOrm;
 
-use AlphaSoft\Sql\Repository\Repository;
+use AlphaSoft\AsLinkOrm\Repository\Repository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 
