@@ -111,6 +111,35 @@ class RepositoryTest extends TestCase
         $this->assertSame(1, $relatedUser->getPrimaryKeyValue());
     }
 
+    public function testToDbMethod()
+    {
+        $user = new User();
+        $user
+            ->set('firstname', 'John')
+            ->set('no_mapping_property', 123)
+            ->set('no_mapping_property_2', 456);
+
+        $this->assertEquals([
+            'id' => null,
+            'firstname' => 'John',
+            'lastname' => null,
+            'email' => null,
+            'password' => null,
+            'is_active' => false,
+        ], $user->toDb());
+
+        $this->assertEquals([
+            'id' => null,
+            'firstname' => 'John',
+            'lastname' => null,
+            'email' => null,
+            'password' => null,
+            'isActive' => false,
+            'no_mapping_property' => 123,
+            'no_mapping_property_2' => 456,
+        ], $user->toArray());
+
+    }
     public function testHasMany()
     {
         $this->insertTestData();
@@ -194,6 +223,14 @@ class RepositoryTest extends TestCase
 
         // Test final posts count
         $this->assertCount(1, $user->getPosts());
+    }
+
+    public function testOrderBy()
+    {
+        $this->insertTestData();
+
+        $users = $this->userRepository->findBy([], ['isActive' => 'DESC']);
+        $this->assertCount(2, $users);
     }
 
     public function testModelCache()

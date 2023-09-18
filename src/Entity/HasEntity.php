@@ -18,6 +18,19 @@ abstract class HasEntity extends Model
      */
     private $__manager = null;
 
+    final public function toDb(): array
+    {
+        $dbData = [];
+        foreach (self::getColumns() as $column) {
+            $property = $column->getProperty();
+            if (!array_key_exists($property, $this->attributes)) {
+                continue;
+            }
+            $dbData[$column->getName()] = $this->attributes[$property];
+        }
+        return $dbData;
+    }
+
     public function setDoctrineManager(DoctrineManager $manager): void
     {
         $this->__manager = $manager;
@@ -94,6 +107,9 @@ abstract class HasEntity extends Model
         return $cache->get(static::class)->getName();
     }
 
+    /**
+     * @return array<Column>
+     */
     final static public function getColumns(): array
     {
         $cache = ColumnCache::getInstance();

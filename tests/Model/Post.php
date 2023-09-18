@@ -32,8 +32,6 @@ final class Post extends HasEntity
 
     static protected function columnsMapping(): array
     {
-
-
         return [
             new PrimaryKeyColumn('id'),
             new Column('title'),

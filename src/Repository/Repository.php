@@ -123,6 +123,7 @@ abstract class Repository
         $modelClass = $this->getModelName();
 
         $arguments = $this->mapPropertiesToColumn($arguments);
+        $orderBy = $this->mapPropertiesToColumn($orderBy);
         $properties = array_map(function (Column $column) {
             return $column->getName();
         }, $modelClass::getColumns());
@@ -142,6 +143,16 @@ abstract class Repository
     public function createQueryBuilder(): QueryBuilder
     {
         return $this->manager->getConnection()->createQueryBuilder();
+    }
+
+    public function queryUpdate(string $alias = null): QueryBuilder
+    {
+        return $this->createQueryBuilder()->update($this->getTableName(),$alias);
+    }
+
+    public function querySelect(string $alias = null): QueryBuilder
+    {
+        return $this->createQueryBuilder()->from($this->getTableName(),$alias);
     }
 
     protected static function generateWhereQuery(QueryBuilder $query, array $arguments = []): void
