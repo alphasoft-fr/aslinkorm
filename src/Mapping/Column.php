@@ -19,7 +19,7 @@ class Column
      */
     private $name;
 
-    final public function __construct(string $property, string $defaultValue = null, string $name = null)
+    final public function __construct(string $property, $defaultValue = null, string $name = null)
     {
         $this->property = $property;
         $this->defaultValue = $defaultValue;
