@@ -26,7 +26,7 @@ abstract class HasEntity extends Model
             if (!array_key_exists($property, $this->attributes)) {
                 continue;
             }
-            $dbData[$column->getName()] = $this->attributes[$property];
+            $dbData[sprintf('`%s`',$column->getName())] = $this->attributes[$property];
         }
         return $dbData;
     }

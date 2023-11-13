@@ -120,12 +120,12 @@ class RepositoryTest extends TestCase
             ->set('no_mapping_property_2', 456);
 
         $this->assertEquals([
-            'id' => null,
-            'firstname' => 'John',
-            'lastname' => null,
-            'email' => null,
-            'password' => null,
-            'is_active' => false,
+            '`id`' => null,
+            '`firstname`' => 'John',
+            '`lastname`' => null,
+            '`email`' => null,
+            '`password`' => null,
+            '`is_active`' => false,
         ], $user->toDb());
 
         $this->assertEquals([
@@ -180,12 +180,12 @@ class RepositoryTest extends TestCase
         $result = $user->toDb();
 
         $expectedDbData = [
-            'id' => 1,
-            'firstname' => 'John',
-            'lastname' => 'Doe',
-            'email' => 'john@example.com',
-            'password' => 'secret',
-            'is_active' => true,
+            '`id`' => 1,
+            '`firstname`' => 'John',
+            '`lastname`' => 'Doe',
+            '`email`' => 'john@example.com',
+            '`password`' => 'secret',
+            '`is_active`' => true,
         ];
 
         $this->assertEquals($expectedDbData, $result);
