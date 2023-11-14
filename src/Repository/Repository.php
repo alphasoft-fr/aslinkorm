@@ -125,7 +125,7 @@ abstract class Repository
         $arguments = $this->mapPropertiesToColumn($arguments);
         $orderBy = $this->mapPropertiesToColumn($orderBy);
         $properties = array_map(function (Column $column) {
-            return $column->getName();
+            return sprintf('`%s`',$column->getName());
         }, $modelClass::getColumns());
 
         $query = $this->createQueryBuilder();
