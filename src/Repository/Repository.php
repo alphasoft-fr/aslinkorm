@@ -6,11 +6,14 @@ use AlphaSoft\DataModel\Model;
 use AlphaSoft\DataModel\Factory\ModelFactory;
 use AlphaSoft\AsLinkOrm\DoctrineManager;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
-use AlphaSoft\AsLinkOrm\Entity\HasEntity;
-use Doctrine\DBAL\ArrayParameterType;
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
+use SplObjectStorage;
+use function is_bool;
+use function is_int;
+use function is_null;
 
 abstract class Repository
 {
@@ -20,9 +23,9 @@ abstract class Repository
     protected $manager;
 
     /**
-     * @var array<HasEntity>
+     * @var array<AsEntity>
      */
-    private $modelCache = [];
+    private $entities = [];
 
     public function __construct(DoctrineManager $manager)
     {
@@ -39,11 +42,11 @@ abstract class Repository
     /**
      * Get the name of the model associated with this repository.
      *
-     * @return class-string<Model> The name of the model.
+     * @return class-string<AsEntity> The name of the model.
      */
-    abstract public function getModelName(): string;
+    abstract public function getEntityName(): string;
 
-    public function findOneBy(array $arguments = [], array $orderBy = []): ?Model
+    public function findOneBy(array $arguments = [], array $orderBy = []): ?AsEntity
     {
         $query = $this->generateSelectQuery($arguments, $orderBy, null);
         $item = $query->fetchAssociative();
@@ -53,7 +56,7 @@ abstract class Repository
         return $this->createModel($item);
     }
 
-    public function findBy(array $arguments = [], array $orderBy = [], ?int $limit = null): \SplObjectStorage
+    public function findBy(array $arguments = [], array $orderBy = [], ?int $limit = null): SplObjectStorage
     {
         $query = $this->generateSelectQuery($arguments, $orderBy, $limit);
         $data = $query->fetchAllAssociative();
@@ -61,14 +64,14 @@ abstract class Repository
         return $this->createCollection($data);
     }
 
-    public function insert(HasEntity $model): int
+    public function insert(AsEntity $entity): int
     {
         $connection = $this->manager->getConnection();
         $query = $connection->createQueryBuilder();
         $query->insert($this->getTableName());
 
-        $primaryKeyColumn = $model::getPrimaryKeyColumn();
-        foreach ($model->toDb() as $property => $value) {
+        $primaryKeyColumn = $entity::getPrimaryKeyColumn();
+        foreach ($entity->toDb() as $property => $value) {
             if ($property === $primaryKeyColumn) {
                 continue;
             }
@@ -77,34 +80,35 @@ abstract class Repository
         $rows = $query->executeStatement();
         $lastId = $connection->lastInsertId();
         if ($lastId !== false) {
-            $model->set($primaryKeyColumn, $lastId);
-            $this->modelCache[$model->getPrimaryKeyValue()] = $model;
+            $entity->set($primaryKeyColumn, $lastId);
+            $this->entities[$entity->getPrimaryKeyValue()] = $entity;
+            $entity->setDoctrineManager($this->manager);
         }
         return $rows;
     }
 
-    public function update(HasEntity $model, array $arguments = []): int
+    public function update(AsEntity $entity, array $arguments = []): int
     {
         $query = $this->createQueryBuilder();
         $query->update($this->getTableName());
 
-        $primaryKeyColumn = $model::getPrimaryKeyColumn();
-        foreach ($model->toDb() as $property => $value) {
+        $primaryKeyColumn = $entity::getPrimaryKeyColumn();
+        foreach ($entity->toDbForUpdate() as $property => $value) {
             if ($property === $primaryKeyColumn) {
                 continue;
             }
             $query->set($property, $query->createPositionalParameter($value, self::typeOfValue($value)));
         }
-        self::generateWhereQuery($query, array_merge([$primaryKeyColumn => $model->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
+        self::generateWhereQuery($query, array_merge([$primaryKeyColumn => $entity->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
         return $query->executeStatement();
     }
 
-    public function delete(HasEntity $model): int
+    public function delete(AsEntity $entity): int
     {
         $connection = $this->manager->getConnection();
         $query = $connection->createQueryBuilder();
         $query->delete($this->getTableName())
-            ->where($model::getPrimaryKeyColumn() . ' = ' . $query->createPositionalParameter($model->getPrimaryKeyValue()));
+            ->where($entity::getPrimaryKeyColumn() . ' = ' . $query->createPositionalParameter($entity->getPrimaryKeyValue()));
 
         return $query->executeStatement();
     }
@@ -118,15 +122,15 @@ abstract class Repository
     protected function generateSelectQuery(array $arguments = [], array $orderBy = [], ?int $limit = null): QueryBuilder
     {
         /**
-         * @var class-string<HasEntity> $modelClass
+         * @var class-string<AsEntity> $entityName
          */
-        $modelClass = $this->getModelName();
+        $entityName = $this->getEntityName();
 
         $arguments = $this->mapPropertiesToColumn($arguments);
         $orderBy = $this->mapPropertiesToColumn($orderBy);
         $properties = array_map(function (Column $column) {
-            return sprintf('`%s`',$column->getName());
-        }, $modelClass::getColumns());
+            return sprintf('`%s`', $column->getName());
+        }, $entityName::getColumns());
 
         $query = $this->createQueryBuilder();
         $query
@@ -147,12 +151,12 @@ abstract class Repository
 
     public function queryUpdate(string $alias = null): QueryBuilder
     {
-        return $this->createQueryBuilder()->update($this->getTableName(),$alias);
+        return $this->createQueryBuilder()->update($this->getTableName(), $alias);
     }
 
     public function querySelect(string $alias = null): QueryBuilder
     {
-        return $this->createQueryBuilder()->from($this->getTableName(),$alias);
+        return $this->createQueryBuilder()->from($this->getTableName(), $alias);
     }
 
     protected static function generateWhereQuery(QueryBuilder $query, array $arguments = []): void
@@ -169,45 +173,46 @@ abstract class Repository
     final protected function mapPropertiesToColumn(array $arguments): array
     {
         /**
-         * @var class-string<HasEntity> $modelClass
+         * @var class-string<AsEntity> $entityName
          */
-        $modelClass = $this->getModelName();
+        $entityName = $this->getEntityName();
         $dbArguments = [];
 
         foreach ($arguments as $property => $value) {
-            $column = $modelClass::mapPropertyToColumn($property);
+            $column = $entityName::mapPropertyToColumn($property);
             $dbArguments[$column] = $value;
         }
 
         return $dbArguments;
     }
 
-    final protected function createModel(array $data): Model {
+    final protected function createModel(array $data): AsEntity
+    {
         /**
-         * @var class-string<HasEntity> $modelClass
+         * @var class-string<AsEntity> $entityName
          */
-        $modelClass = $this->getModelName();
-        $primaryKeyValue = $data[$modelClass::getPrimaryKeyColumn()];
-        if (array_key_exists($primaryKeyValue, $this->modelCache)) {
-            $model = $this->modelCache[$primaryKeyValue];
-            $model->hydrate($data);  // Hydrate with new data
-        }else {
-            $model = ModelFactory::createModel($this->getModelName(), $data);
-            $this->modelCache[$primaryKeyValue] = $model;
+        $entityName = $this->getEntityName();
+        $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
+        if (array_key_exists($primaryKeyValue, $this->entities)) {
+            $entity = $this->entities[$primaryKeyValue];
+            $entity->hydrate($data);  // Hydrate with new data
+        } else {
+            $entity = ModelFactory::createModel($this->getEntityName(), $data);
+            $this->entities[$primaryKeyValue] = $entity;
         }
 
-        if (is_subclass_of($model, HasEntity::class)) {
-            $model->setDoctrineManager($this->manager);
+        if (is_subclass_of($entity, AsEntity::class)) {
+            $entity->setDoctrineManager($this->manager);
         }
-        return $model;
+        return $entity;
     }
 
-    final protected function createCollection(array $dataCollection): \SplObjectStorage
+    final protected function createCollection(array $dataCollection): SplObjectStorage
     {
-        $storage = new \SplObjectStorage();
+        $storage = new SplObjectStorage();
         foreach ($dataCollection as $data) {
-            $model = $this->createModel($data);
-            $storage->attach($model);
+            $entity = $this->createModel($data);
+            $storage->attach($entity);
         }
         return $storage;
     }
@@ -216,13 +221,21 @@ abstract class Repository
     protected static function typeOfValue($value): int
     {
         $type = ParameterType::STRING;
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             $type = ParameterType::BOOLEAN;
-        } elseif (\is_int($value)) {
+        } elseif (is_int($value)) {
             $type = ParameterType::INTEGER;
-        } elseif (\is_null($value)) {
+        } elseif (is_null($value)) {
             $type = ParameterType::NULL;
         }
         return $type;
+    }
+
+    public function clear(): void
+    {
+        foreach ($this->entities as &$objet) {
+            unset($objet);
+        }
+        $this->entities = [];
     }
 }

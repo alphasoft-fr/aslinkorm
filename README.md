@@ -239,9 +239,9 @@ The `HasEntity` class offers two methods, `hasOne` and `hasMany`, which facilita
 The `hasOne` method establishes a one-to-one relationship between the current model and another related model. Here's an example of how you might use it:
 
 ```php
-use AlphaSoft\AsLinkOrm\Entity\HasEntity;
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 
-class User extends HasEntity
+class User extends AsEntity
 {
     // ... (other code)
     
@@ -259,9 +259,9 @@ In this scenario, the `getProfile` method sets up a one-to-one relationship betw
 The `hasMany` method establishes a one-to-many relationship between the current model and another related model. Consider this example:
 
 ```php
-use AlphaSoft\AsLinkOrm\Entity\HasEntity;
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 
-class User extends HasEntity
+class User extends AsEntity
 {
     // ... (other code)
     

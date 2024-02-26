@@ -4,10 +4,10 @@ namespace Test\AlphaSoft\AsLinkOrm\Model;
 
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
-use AlphaSoft\AsLinkOrm\Entity\HasEntity;
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use Test\AlphaSoft\AsLinkOrm\Repository\PostRepository;
 
-final class Post extends HasEntity
+final class Post extends AsEntity
 {
     public function getPrimaryKeyValue(): ?int
     {

@@ -12,7 +12,7 @@ class PostRepository extends Repository
         return 'post';
     }
 
-    public function getModelName(): string
+    public function getEntityName(): string
     {
         return Post::class;
     }

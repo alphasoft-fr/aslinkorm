@@ -11,12 +11,21 @@ use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use LogicException;
 use SplObjectStorage;
 
-abstract class HasEntity extends Model
+abstract class AsEntity extends Model
 {
     /**
      * @var null|DoctrineManager
      */
     private $__manager = null;
+
+    private $_modifiedAttributes = [];
+
+    final public function set(string $property, $value): Model
+    {
+        parent::set($property, $value);
+        $this->_modifiedAttributes[$property] = $value;
+        return $this;
+    }
 
     final public function toDb(): array
     {
@@ -31,14 +40,27 @@ abstract class HasEntity extends Model
         return $dbData;
     }
 
+    final public function toDbForUpdate(): array
+    {
+        $dbData = [];
+        foreach (self::getColumns() as $column) {
+            $property = $column->getProperty();
+            if (!array_key_exists($property, $this->_modifiedAttributes)) {
+                continue;
+            }
+            $dbData[sprintf('`%s`',$column->getName())] = $this->_modifiedAttributes[$property];
+        }
+        return $dbData;
+    }
+
     public function setDoctrineManager(DoctrineManager $manager): void
     {
         $this->__manager = $manager;
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = []): ?HasEntity
+    protected function hasOne(string $relatedModel, array $criteria = []): ?AsEntity
     {
-        if (!is_subclass_of($relatedModel, HasEntity::class)) {
+        if (!is_subclass_of($relatedModel, AsEntity::class)) {
             throw new LogicException("The related model '$relatedModel' must be a subclass of HasEntity.");
         }
 
@@ -47,7 +69,7 @@ abstract class HasEntity extends Model
 
     protected function hasMany(string $relatedModel, array $criteria = []): SplObjectStorage
     {
-        if (!is_subclass_of($relatedModel, HasEntity::class)) {
+        if (!is_subclass_of($relatedModel, AsEntity::class)) {
             throw new LogicException("The related model '$relatedModel' must be a subclass of HasEntity.");
         }
 

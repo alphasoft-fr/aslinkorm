@@ -12,7 +12,7 @@ class UserRepository extends Repository
         return 'user';
     }
 
-    public function getModelName(): string
+    public function getEntityName(): string
     {
         return User::class;
     }
