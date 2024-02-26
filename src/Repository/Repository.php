@@ -233,7 +233,7 @@ abstract class Repository
 
     public function clear(): void
     {
-        foreach ($this->entities as &$objet) {
+        foreach ($this->entities as $objet) {
             unset($objet);
         }
         $this->entities = [];

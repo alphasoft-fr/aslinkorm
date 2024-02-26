@@ -20,6 +20,7 @@ abstract class AsEntity extends Model
 
     private $_modifiedAttributes = [];
 
+
     final public function set(string $property, $value): Model
     {
         parent::set($property, $value);

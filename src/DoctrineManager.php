@@ -39,4 +39,10 @@ class DoctrineManager
         }
         return  $this->repositories[$repository];
     }
+
+    public function clearAll(): void {
+        foreach ($this->repositories as $repository) {
+            $repository->clear();
+        }
+    }
 }

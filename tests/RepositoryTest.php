@@ -140,6 +140,20 @@ class RepositoryTest extends TestCase
         ], $user->toArray());
 
     }
+
+    public function testToDbForUpdatedMethod()
+    {
+        $user = new User();
+        $user
+            ->set('firstname', 'John')
+            ->set('no_mapping_property', 123)
+            ->set('no_mapping_property_2', 456);
+
+        $this->assertEquals([
+            '`firstname`' => 'John',
+        ], $user->toDbForUpdate());
+
+    }
     public function testHasMany()
     {
         $this->insertTestData();
