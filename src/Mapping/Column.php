@@ -9,6 +9,8 @@ class Column
      */
     private $property;
 
+    private $type = 'string';
+
     /**
      * @var mixed
      */
@@ -19,7 +21,7 @@ class Column
      */
     private $name;
 
-    final public function __construct(string $property, $defaultValue = null, string $name = null)
+     public function __construct(string $property, $defaultValue = null, string $name = null)
     {
         $this->property = $property;
         $this->defaultValue = $defaultValue;
@@ -47,5 +49,16 @@ class Column
     final public function getDefaultValue()
     {
         return $this->defaultValue;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    final public function type(string $type): self
+    {
+        $this->type = $type;
+        return $this;
     }
 }

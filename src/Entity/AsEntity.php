@@ -2,10 +2,13 @@
 
 namespace AlphaSoft\AsLinkOrm\Entity;
 
+use AlphaSoft\AsLinkOrm\Coordinator\EntityRelationCoordinator;
+use AlphaSoft\AsLinkOrm\Serializer\SerializerToDb;
+use AlphaSoft\AsLinkOrm\Serializer\SerializerToDbForUpdate;
 use AlphaSoft\DataModel\Model;
 use AlphaSoft\AsLinkOrm\Cache\ColumnCache;
 use AlphaSoft\AsLinkOrm\Cache\PrimaryKeyColumnCache;
-use AlphaSoft\AsLinkOrm\DoctrineManager;
+use AlphaSoft\AsLinkOrm\EntityManager;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use LogicException;
@@ -14,78 +17,65 @@ use SplObjectStorage;
 abstract class AsEntity extends Model
 {
     /**
-     * @var null|DoctrineManager
+     * @var null|EntityRelationCoordinator
      */
-    private $__manager = null;
+    private $__relationCoordinator = null;
 
     private $_modifiedAttributes = [];
 
+    final public function hydrate(array $data): void
+    {
+        foreach ($data as $property => $value) {
+            parent::set($property, $value);
+        }
+    }
 
     final public function set(string $property, $value): Model
     {
+        $property = static::mapColumnToProperty($property);
+        if ($value !== $this->getOrNull($property)) {
+            $this->_modifiedAttributes[$property] = $value;
+        }
         parent::set($property, $value);
-        $this->_modifiedAttributes[$property] = $value;
+
         return $this;
+    }
+
+    public function getModifiedAttributes(): array
+    {
+        return $this->_modifiedAttributes;
     }
 
     final public function toDb(): array
     {
-        $dbData = [];
-        foreach (self::getColumns() as $column) {
-            $property = $column->getProperty();
-            if (!array_key_exists($property, $this->attributes)) {
-                continue;
-            }
-            $dbData[sprintf('`%s`',$column->getName())] = $this->attributes[$property];
-        }
-        return $dbData;
+        return (new SerializerToDb($this))->serialize();
     }
 
     final public function toDbForUpdate(): array
     {
-        $dbData = [];
-        foreach (self::getColumns() as $column) {
-            $property = $column->getProperty();
-            if (!array_key_exists($property, $this->_modifiedAttributes)) {
-                continue;
-            }
-            $dbData[sprintf('`%s`',$column->getName())] = $this->_modifiedAttributes[$property];
-        }
-        return $dbData;
+        return (new SerializerToDbForUpdate($this))->serialize();
     }
 
-    public function setDoctrineManager(DoctrineManager $manager): void
+    public function setEntityManager(?EntityManager $manager): void
     {
-        $this->__manager = $manager;
+        $this->__relationCoordinator = $manager ? new EntityRelationCoordinator($manager) : null;
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = []): ?AsEntity
+    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?AsEntity
     {
-        if (!is_subclass_of($relatedModel, AsEntity::class)) {
-            throw new LogicException("The related model '$relatedModel' must be a subclass of HasEntity.");
-        }
-
-        return $this->getManager()->getRepository($relatedModel::getRepositoryName())->findOneBy($criteria);
+        return $this->__relationCoordinator ? $this->__relationCoordinator->hasOne($relatedModel, $criteria, $force) : null;
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = []): SplObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): iterable
     {
-        if (!is_subclass_of($relatedModel, AsEntity::class)) {
-            throw new LogicException("The related model '$relatedModel' must be a subclass of HasEntity.");
-        }
-
-        return $this->getManager()->getRepository($relatedModel::getRepositoryName())->findBy($criteria);
+        return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new SplObjectStorage();
     }
 
-    /**
-     * @return DoctrineManager|null
-     */
-    private function getManager(): ?DoctrineManager
+    public function clearRelationsCache(): void
     {
-        if ($this->__manager === null) {
-            throw new LogicException(DoctrineManager::class . ' must be set before using this method.');
+        if ($this->__relationCoordinator) {
+            $this->__relationCoordinator->clearCache();
         }
-        return $this->__manager;
     }
 
     final static protected function getDefaultAttributes(): array

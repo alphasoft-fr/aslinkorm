@@ -2,7 +2,7 @@
 
 namespace Test\AlphaSoft\AsLinkOrm;
 
-use AlphaSoft\AsLinkOrm\DoctrineManager;
+use AlphaSoft\AsLinkOrm\EntityManager;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Test\AlphaSoft\AsLinkOrm\Model\Post;
@@ -13,12 +13,13 @@ use Test\AlphaSoft\AsLinkOrm\Repository\UserRepository;
 class RepositoryTest extends TestCase
 {
     private $connection;
+    private $manager;
     private $userRepository;
     private $postRepository;
 
     protected function setUp(): void
     {
-        $manager = new DoctrineManager([
+        $manager = new EntityManager([
             'url' => 'sqlite:///:memory:',
             'driverOptions' => array(
                 PDO::ATTR_EMULATE_PREPARES => FALSE,
@@ -27,10 +28,9 @@ class RepositoryTest extends TestCase
         ]);
 
         $this->connection = $manager->getConnection();
-
         $this->setUpDatabaseSchema();
 
-
+        $this->manager = $manager;
         $this->userRepository = $manager->getRepository(UserRepository::class);
         $this->postRepository = $manager->getRepository(PostRepository::class);
     }
@@ -288,6 +288,17 @@ class RepositoryTest extends TestCase
         $posts = $user1->getPosts();
 
         $this->assertTrue($posts->contains($newPost));
+
+        $newPost2 = new Post([
+            'title' => 'New Post',
+            'content' => 'This is a new post.',
+            'user_id' => $user1->getPrimaryKeyValue(),
+        ]);
+
+        $this->postRepository->insert($newPost2);
+
+        $posts = $user1->getPosts();
+        $this->assertTrue($posts->contains($newPost2));
     }
 
 
@@ -336,4 +347,47 @@ class RepositoryTest extends TestCase
         $this->assertEquals(1, $this->postRepository->insert($post_2));
 
     }
+
+    public function testPersistAndFlush(): void
+    {
+
+        $user_1 = new User([
+            'firstname' => 'John',
+            'lastname' => 'Doe',
+            'email' => 'john@example.com',
+            'password' => 'secret',
+            'isActive' => true,
+        ]);
+
+        $user_2 = new User([
+            'firstname' => 'Jane',
+            'lastname' => 'Smith',
+            'email' => 'jane@example.com',
+            'password' => 'password',
+            'isActive' => true,
+        ]);
+        $this->manager->persist($user_1);
+        $this->manager->persist($user_2);
+        $this->manager->flush();
+
+        $users = $this->userRepository->findBy([]);
+        $this->assertCount(2, iterator_to_array($users, false));
+    }
+
+    public function testGetRepositoriesByEntityName(): void
+    {
+        $this->insertTestData();
+
+        $userRepository = $this->manager->getRepository(User::class);
+        $this->assertInstanceOf(UserRepository::class, $userRepository);
+    }
+
+    public function testRelationsDefaultsValues(): void
+    {
+        $this->insertTestData();
+
+        $user = new User();
+        $this->assertTrue($user->getPosts()->count() == 0);
+    }
+
 }

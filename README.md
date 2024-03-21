@@ -37,14 +37,14 @@ To get started with ASLinkORM , you need to follow these steps:
 1. **Initialize the DoctrineManager:** In your application's entry point, initialize the `DoctrineManager` with your database configuration. Make sure to adjust the configuration according to your database setup.
 
 ```php
-use AlphaSoft\AsLinkOrm\DoctrineManager;
+use AlphaSoft\AsLinkOrm\EntityManager;
 
 $config = [
      'url' => 'mysql://username:password@localhost/db_name',
      // ... other options
  ];
 
- $manager = new DoctrineManager($config);
+ $manager = new EntityManager($config);
 ```
 
 2. **Create Repositories:** Create repository classes for your models by extending the `Repository` base class. Define the table name, model name, and selectable fields.
@@ -346,6 +346,106 @@ $userRepository->insert($user);
 ```
 
 The columnsMapping() method is essential as it defines the column name mappings for the model's attributes. This mapping is necessary because it specifies how the model's attributes correspond to the columns in the database table. By default, the ORM will attempt to associate each attribute with a column of the same name in the database. However, in cases where the attribute name in the model differs from the corresponding database column name, the Column object can be used to specify custom mappings, as demonstrated in the example: new Column('isActive', false, 'is_active').
+
+Sure, here's an additional section for persistence, removal, and flushing:
+
+## Persistence, Removal, and Flushing
+
+ASLinkORM provides methods for persisting entities, removing entities, and flushing changes to the underlying database. These methods are essential for managing the lifecycle of entities and ensuring that changes are properly synchronized with the database.
+
+### Persistence
+
+The `persist` method allows you to mark an entity for insertion into the database. When you call `persist` on an entity, ASLinkORM tracks it and includes it in the flush operation later.
+
+```php
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
+
+// Assuming $entityManager is an instance of EntityManager
+$user = new User([
+    'firstname' => 'John',
+    'lastname' => 'Doe',
+    'email' => 'john@example.com',
+]);
+
+$entityManager->persist($user);
+```
+
+### Removal
+
+The `remove` method allows you to mark an entity for removal from the database. When you call `remove` on an entity, ASLinkORM tracks it and includes it in the flush operation later.
+
+```php
+use AlphaSoft\AsLinkOrm\Entity\AsEntity;
+
+// Assuming $entityManager is an instance of EntityManager
+$user = $userRepository->findOneBy(['id' => 1]);
+
+$entityManager->remove($user);
+```
+
+### Flushing
+
+The `flush` method synchronizes changes made to tracked entities with the underlying database. It executes pending insertions, updates, and deletions, ensuring that the database reflects the current state of the entities.
+
+```php
+use AlphaSoft\AsLinkOrm\EntityManager;
+
+// Assuming $entityManager is an instance of EntityManager
+$entityManager->flush();
+```
+
+By using these methods, you can manage the persistence and removal of entities in your application, ensuring that changes are properly synchronized with the database.
+
+Now, developers can leverage these methods to effectively manage entity lifecycle and ensure data integrity within their applications.
+
+Feel free to incorporate this section into your README to provide comprehensive guidance on working with ASLinkORM.
+
+## Debugging SQL Queries
+
+SqlDebugger is a handy utility class included within the EntityManager of AsLinkORM. It allows developers to debug SQL queries executed by their application easily. While interacting with the EntityManager, developers can access the SqlDebugger to gain insights into query execution times and parameters, aiding in the identification and resolution of database-related issues.
+
+### Accessing SqlDebugger
+
+Developers can access the SqlDebugger for debugging purposes through the EntityManager class. Once the EntityManager is instantiated, the SqlDebugger instance associated with it can be retrieved using the `getConnection()` method.
+
+```php
+use AlphaSoft\AsLinkOrm\EntityManager;
+
+// Instantiate the EntityManager with database parameters
+$entityManager = new EntityManager($params);
+
+// Retrieve the SqlDebugger instance
+$sqlDebugger = $entityManager->getConnection()->getSqlDebugger();
+```
+
+Once the SqlDebugger instance is obtained, developers can utilize its methods to retrieve information about executed SQL queries and their execution times.
+
+### Example Usage
+
+```php
+use AlphaSoft\AsLinkOrm\EntityManager;
+
+// Instantiate the EntityManager with database parameters
+$entityManager = new EntityManager($params);
+
+// Retrieve the SqlDebugger instance
+$sqlDebugger = $entityManager->getConnection()->getSqlDebugger();
+
+// Execute SQL queries using EntityManager
+// ...
+
+// Retrieve and display debug information
+$queries = $sqlDebugger->getQueries();
+
+foreach ($queries as $queryInfo) {
+    echo "Query: " . $queryInfo['query'] . "\n";
+    echo "Parameters: " . implode(', ', $queryInfo['params']) . "\n";
+    echo "Execution Time: " . $queryInfo['executionTime'] . " seconds\n";
+    echo "\n";
+}
+```
+
+By following these steps, developers can effectively debug SQL queries within their applications using the integrated SqlDebugger class provided by AsLinkORM.
 
 ## Contributing
 
