@@ -61,12 +61,12 @@ abstract class AsEntity extends Model
         $this->__relationCoordinator = $manager ? new EntityRelationCoordinator($manager) : null;
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?AsEntity
+    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?object
     {
         return $this->__relationCoordinator ? $this->__relationCoordinator->hasOne($relatedModel, $criteria, $force) : null;
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): iterable
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): \SplObjectStorage
     {
         return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new SplObjectStorage();
     }
