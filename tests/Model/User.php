@@ -2,6 +2,7 @@
 
 namespace Test\AlphaSoft\AsLinkOrm\Model;
 
+use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
@@ -19,7 +20,7 @@ final class User extends AsEntity
         return UserRepository::class;
     }
 
-    public function getPosts(): \SplObjectStorage
+    public function getPosts(): ObjectStorage
     {
         return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()]);
     }

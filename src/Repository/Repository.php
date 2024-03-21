@@ -2,19 +2,13 @@
 
 namespace AlphaSoft\AsLinkOrm\Repository;
 
-use AlphaSoft\AsLinkOrm\Helper\QueryHelper;
-use AlphaSoft\DataModel\Model;
-use AlphaSoft\DataModel\Factory\ModelFactory;
-use AlphaSoft\AsLinkOrm\EntityManager;
-use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
+use AlphaSoft\AsLinkOrm\EntityManager;
+use AlphaSoft\AsLinkOrm\Helper\QueryHelper;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\DataModel\Factory\ModelFactory;
 use Doctrine\DBAL\Query\QueryBuilder;
-use SplObjectStorage;
-use function is_bool;
-use function is_int;
-use function is_null;
 
 abstract class Repository
 {
@@ -57,7 +51,7 @@ abstract class Repository
         return $this->createModel($item);
     }
 
-    public function findBy(array $arguments = [], array $orderBy = [], ?int $limit = null): SplObjectStorage
+    public function findBy(array $arguments = [], array $orderBy = [], ?int $limit = null): ObjectStorage
     {
         $query = $this->generateSelectQuery($arguments, $orderBy, $limit);
         $data = $query->fetchAllAssociative();
@@ -204,9 +198,9 @@ abstract class Repository
         return $entity;
     }
 
-    final protected function createCollection(array $dataCollection): SplObjectStorage
+    final protected function createCollection(array $dataCollection): ObjectStorage
     {
-        $storage = new SplObjectStorage();
+        $storage = new ObjectStorage();
         foreach ($dataCollection as $data) {
             $entity = $this->createModel($data);
             $storage->attach($entity);

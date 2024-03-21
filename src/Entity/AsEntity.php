@@ -2,17 +2,17 @@
 
 namespace AlphaSoft\AsLinkOrm\Entity;
 
-use AlphaSoft\AsLinkOrm\Coordinator\EntityRelationCoordinator;
-use AlphaSoft\AsLinkOrm\Serializer\SerializerToDb;
-use AlphaSoft\AsLinkOrm\Serializer\SerializerToDbForUpdate;
-use AlphaSoft\DataModel\Model;
 use AlphaSoft\AsLinkOrm\Cache\ColumnCache;
 use AlphaSoft\AsLinkOrm\Cache\PrimaryKeyColumnCache;
+use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
+use AlphaSoft\AsLinkOrm\Coordinator\EntityRelationCoordinator;
 use AlphaSoft\AsLinkOrm\EntityManager;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
+use AlphaSoft\AsLinkOrm\Serializer\SerializerToDb;
+use AlphaSoft\AsLinkOrm\Serializer\SerializerToDbForUpdate;
+use AlphaSoft\DataModel\Model;
 use LogicException;
-use SplObjectStorage;
 
 abstract class AsEntity extends Model
 {
@@ -66,9 +66,9 @@ abstract class AsEntity extends Model
         return $this->__relationCoordinator ? $this->__relationCoordinator->hasOne($relatedModel, $criteria, $force) : null;
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): \SplObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): ObjectStorage
     {
-        return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new SplObjectStorage();
+        return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new ObjectStorage();
     }
 
     public function clearRelationsCache(): void

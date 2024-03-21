@@ -2,6 +2,7 @@
 
 namespace AlphaSoft\AsLinkOrm\Coordinator;
 
+use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\EntityManager;
 
@@ -32,7 +33,7 @@ final class EntityRelationCoordinator
         return $this->_relationsCache[$key];
     }
 
-    public function hasMany(string $relatedModel, array $criteria = [], bool $force = false): \SplObjectStorage
+    public function hasMany(string $relatedModel, array $criteria = [], bool $force = false): ObjectStorage
     {
         if (!is_subclass_of($relatedModel, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModel' must be a subclass of AsEntity.");
