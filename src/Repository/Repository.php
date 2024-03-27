@@ -41,6 +41,42 @@ abstract class Repository
      */
     abstract public function getEntityName(): string;
 
+    public function findByCache(array $arguments = [], array $orderBy = [], ?int $limit = null)
+    {
+        $cacheKey = md5('many' . $this->getTableName() . json_encode($arguments) . json_encode($orderBy) . json_encode($limit));
+        if (!array_key_exists($cacheKey, $this->entities)) {
+            $this->entities[$cacheKey] = $this->findBy($arguments, $orderBy, $limit);
+        }
+        return $this->entities[$cacheKey];
+    }
+
+    public function findOneByCache(array $arguments = [], array $orderBy = []): ?AsEntity
+    {
+        $cacheKey = md5('one' . $this->getTableName() . json_encode($arguments) . json_encode($orderBy));
+        if (!array_key_exists($cacheKey, $this->entities)) {
+            $this->entities[$cacheKey] = $this->findOneBy($arguments, $orderBy);
+        }
+        return $this->entities[$cacheKey];
+    }
+
+    public function findPkCache(int $pk): ?AsEntity
+    {
+        if (!array_key_exists($pk, $this->entities)) {
+            $this->entities[$pk] = $this->findPk($pk);
+        }
+        return $this->entities[$pk];
+    }
+
+    public function findPk(int $pk): ?AsEntity
+    {
+        /**
+         * @var class-string<AsEntity> $entityName
+         */
+        $entityName = $this->getEntityName();
+        $primaryKeyColumn = $entityName::getPrimaryKeyColumn();
+        return $this->findOneBy([$primaryKeyColumn => $pk]);
+    }
+
     public function findOneBy(array $arguments = [], array $orderBy = []): ?AsEntity
     {
         $query = $this->generateSelectQuery($arguments, $orderBy, null);
@@ -75,7 +111,7 @@ abstract class Repository
         $rows = $query->executeStatement();
         $lastId = $connection->lastInsertId();
         if ($lastId !== false) {
-            $entity->set($primaryKeyColumn, $lastId);
+            $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int) $lastId : $lastId);
             $this->entities[$entity->getPrimaryKeyValue()] = $entity;
             $entity->setEntityManager($this->manager);
         }

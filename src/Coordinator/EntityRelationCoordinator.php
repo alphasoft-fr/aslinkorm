@@ -13,42 +13,51 @@ final class EntityRelationCoordinator
      */
     private $entityManager;
 
-    private $_relationsCache = [];
 
     public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
     }
 
-    public function hasOne(string $relatedModel, array $criteria = [], bool $force = false): ?object
+    public function findPk(string $relatedModelClass, int $pk, bool $force = false): ?AsEntity
     {
-        if (!is_subclass_of($relatedModel, AsEntity::class)) {
-            throw new \LogicException("The related model '$relatedModel' must be a subclass of AsEntity.");
-        }
-        $key = md5($relatedModel.json_encode($criteria));
-        if ($force || !array_key_exists($key, $this->_relationsCache)) {
-            $this->_relationsCache[$key] = $this->getEntityManager()->getRepository($relatedModel::getRepositoryName())->findOneBy($criteria);
+        if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
+            throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
 
-        return $this->_relationsCache[$key];
+        $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
+        if ($force === false) {
+            return $repository->findPkCache($pk);
+        }
+        return $repository->findPk($pk);
     }
 
-    public function hasMany(string $relatedModel, array $criteria = [], bool $force = false): ObjectStorage
+    public function hasOne(string $relatedModelClass, array $criteria = [], bool $force = false): ?object
     {
-        if (!is_subclass_of($relatedModel, AsEntity::class)) {
-            throw new \LogicException("The related model '$relatedModel' must be a subclass of AsEntity.");
+        if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
+            throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
-        $key = md5($relatedModel.json_encode($criteria));
-        if ($force || !array_key_exists($key, $this->_relationsCache)) {
-            $this->_relationsCache[$key] = $this->getEntityManager()->getRepository($relatedModel::getRepositoryName())->findBy($criteria);
+
+        $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
+        if ($force === false) {
+            return $repository->findOneByCache($criteria);
         }
-        return $this->_relationsCache[$key];
+        return $repository->findOneBy($criteria);
     }
 
-    public function clearCache(): void
+    public function hasMany(string $relatedModelClass, array $criteria = [], bool $force = false): ObjectStorage
     {
-        $this->_relationsCache = [];
+        if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
+            throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
+        }
+
+        $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
+        if ($force === false) {
+            return $repository->findByCache($criteria);
+        }
+        return $repository->findBy($criteria);
     }
+
 
     private function getEntityManager(): EntityManager
     {

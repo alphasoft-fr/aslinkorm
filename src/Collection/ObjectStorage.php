@@ -64,4 +64,20 @@ class ObjectStorage extends \SplObjectStorage
     {
         return iterator_to_array($this);
     }
+
+    /**
+     * Retrieves the last item in the collection.
+     *
+     * @return mixed|null The last item in the collection, or null if the collection is empty.
+     */
+    public function last()
+    {
+        $last = null;
+        foreach ($this as $item) {
+            $last = $item;
+        }
+        return $last;
+    }
+
+
 }

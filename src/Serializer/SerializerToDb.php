@@ -6,7 +6,6 @@ use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 
 final class SerializerToDb
 {
-
     /**
      * @var AsEntity
      */

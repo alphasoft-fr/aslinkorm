@@ -77,4 +77,10 @@ final class UnitOfWork
             unset($this->entityDeletions[$id]);
         }
     }
+     public function clear(): void
+     {
+         $this->entityInsertions = [];
+         $this->entityUpdates = [];
+         $this->entityDeletions = [];
+     }
 }

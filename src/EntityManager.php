@@ -89,4 +89,11 @@ class EntityManager
             $repository->clear();
         }
     }
+
+    public function getUnitOfWork(): UnitOfWork
+    {
+        return $this->unitOfWork;
+    }
+
+
 }

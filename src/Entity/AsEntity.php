@@ -71,13 +71,6 @@ abstract class AsEntity extends Model
         return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new ObjectStorage();
     }
 
-    public function clearRelationsCache(): void
-    {
-        if ($this->__relationCoordinator) {
-            $this->__relationCoordinator->clearCache();
-        }
-    }
-
     final static protected function getDefaultAttributes(): array
     {
         $attributes = [];

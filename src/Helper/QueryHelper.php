@@ -2,7 +2,6 @@
 
 namespace AlphaSoft\AsLinkOrm\Helper;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
