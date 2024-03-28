@@ -94,7 +94,7 @@ abstract class AsEntity extends Model
         return $this->__relationCoordinator->findPk($relatedModel, $pk, $force);
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = false): ?object
+    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?object
     {
         if ($this->__relationCoordinator === null) {
             return null;
@@ -107,7 +107,7 @@ abstract class AsEntity extends Model
         return $this->get($attributeKey);
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = false): ObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): ObjectStorage
     {
         $attributeKey = md5($relatedModel . json_encode($criteria));
         if (!$this->has($attributeKey)) {
