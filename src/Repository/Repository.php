@@ -28,10 +28,10 @@ abstract class Repository
      */
     private $cache;
 
-    public function __construct(EntityManager $manager, MemcachedCache $cache = null)
+    public function __construct(EntityManager $manager)
     {
         $this->manager = $manager;
-        $this->cache = $cache;
+        $this->cache = $manager->getCache();
     }
 
     /**
