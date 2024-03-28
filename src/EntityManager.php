@@ -2,6 +2,7 @@
 
 namespace AlphaSoft\AsLinkOrm;
 
+use AlphaSoft\AsLinkOrm\Cache\MemcachedCache;
 use AlphaSoft\AsLinkOrm\Debugger\SqlDebugger;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\Repository\Repository;
@@ -20,6 +21,11 @@ class EntityManager
     private $unitOfWork;
 
     /**
+     * @var MemcachedCache
+     */
+    private $cache;
+
+    /**
      * @var array<Repository>
      */
     private $repositories = [];
@@ -30,6 +36,7 @@ class EntityManager
         $this->connection = DriverManager::getConnection($params);
         $this->connection->setSqlDebugger(new SqlDebugger());
         $this->unitOfWork = new UnitOfWork();
+        $this->cache = new MemcachedCache();
     }
 
     public function getConnection(): AsLinkConnection
@@ -48,7 +55,7 @@ class EntityManager
         }
 
         if (!isset($this->repositories[$repository])) {
-            $this->repositories[$repository] = new $repository($this);
+            $this->repositories[$repository] = new $repository($this, $this->cache);
         }
         return  $this->repositories[$repository];
     }
@@ -84,7 +91,8 @@ class EntityManager
         }
     }
 
-    public function clearAll(): void {
+    public function clearAll(): void
+    {
         foreach ($this->repositories as $repository) {
             $repository->clear();
         }
@@ -95,5 +103,8 @@ class EntityManager
         return $this->unitOfWork;
     }
 
-
+    public function getCache(): MemcachedCache
+    {
+        return $this->cache;
+    }
 }

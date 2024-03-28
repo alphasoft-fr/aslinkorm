@@ -4,6 +4,13 @@ namespace AlphaSoft\AsLinkOrm\Collection;
 
 class ObjectStorage extends \SplObjectStorage
 {
+
+    public function __construct(array $data = [])
+    {
+        foreach ($data as $item) {
+            $this->attach($item);
+        }
+    }
     /**
      * Finds an object in the collection using a callback.
      *
@@ -79,5 +86,10 @@ class ObjectStorage extends \SplObjectStorage
         return $last;
     }
 
-
+    public function clear(): void
+    {
+        foreach ($this as $item) {
+            $this->detach($item);
+        }
+    }
 }

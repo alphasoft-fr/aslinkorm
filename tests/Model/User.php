@@ -22,7 +22,7 @@ final class User extends AsEntity
 
     public function getPosts(): ObjectStorage
     {
-        return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()]);
+        return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()], true);
     }
 
     static protected function columnsMapping(): array

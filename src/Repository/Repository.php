@@ -2,6 +2,7 @@
 
 namespace AlphaSoft\AsLinkOrm\Repository;
 
+use AlphaSoft\AsLinkOrm\Cache\MemcachedCache;
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\EntityManager;
@@ -22,9 +23,15 @@ abstract class Repository
      */
     private $entities = [];
 
-    public function __construct(EntityManager $manager)
+    /**
+     * @var MemcachedCache|null
+     */
+    private $cache;
+
+    public function __construct(EntityManager $manager, MemcachedCache $cache = null)
     {
         $this->manager = $manager;
+        $this->cache = $cache;
     }
 
     /**
@@ -43,7 +50,7 @@ abstract class Repository
 
     public function findByCache(array $arguments = [], array $orderBy = [], ?int $limit = null)
     {
-        $cacheKey = md5('many' . $this->getTableName() . json_encode($arguments) . json_encode($orderBy) . json_encode($limit));
+        $cacheKey = md5('many' . $this->getEntityName() . json_encode($arguments) . json_encode($orderBy) . json_encode($limit));
         if (!array_key_exists($cacheKey, $this->entities)) {
             $this->entities[$cacheKey] = $this->findBy($arguments, $orderBy, $limit);
         }
@@ -52,7 +59,7 @@ abstract class Repository
 
     public function findOneByCache(array $arguments = [], array $orderBy = []): ?AsEntity
     {
-        $cacheKey = md5('one' . $this->getTableName() . json_encode($arguments) . json_encode($orderBy));
+        $cacheKey = md5('one' . $this->getEntityName() . json_encode($arguments) . json_encode($orderBy));
         if (!array_key_exists($cacheKey, $this->entities)) {
             $this->entities[$cacheKey] = $this->findOneBy($arguments, $orderBy);
         }
@@ -97,6 +104,10 @@ abstract class Repository
 
     public function insert(AsEntity $entity): int
     {
+        if ($entity->getPrimaryKeyValue() !== null) {
+            throw new \LogicException('Cannot insert an entity with a primary key');
+        }
+
         $connection = $this->manager->getConnection();
         $query = $connection->createQueryBuilder();
         $query->insert($this->getTableName());
@@ -112,7 +123,7 @@ abstract class Repository
         $lastId = $connection->lastInsertId();
         if ($lastId !== false) {
             $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int) $lastId : $lastId);
-            $this->entities[$entity->getPrimaryKeyValue()] = $entity;
+            $this->cache->set($entity->getKey(), $entity);
             $entity->setEntityManager($this->manager);
         }
         return $rows;
@@ -120,6 +131,10 @@ abstract class Repository
 
     public function update(AsEntity $entity, array $arguments = []): int
     {
+        if ($entity->getPrimaryKeyValue() === null) {
+            throw new \LogicException('Cannot update an entity without a primary key');
+        }
+
         $query = $this->createQueryBuilder();
         $query->update($this->getTableName());
 
@@ -135,18 +150,26 @@ abstract class Repository
             $query->set($property, $query->createPositionalParameter($value, QueryHelper::typeOfValue($value)));
         }
         QueryHelper::generateWhereQuery($query, array_merge([$primaryKeyColumn => $entity->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
-        return $query->executeStatement();
+        $value =  $query->executeStatement();
+        $this->cache->invalidate($entity->getKey());
+        return $value;
     }
 
     public function delete(AsEntity $entity): int
     {
+        if ($entity->getPrimaryKeyValue() === null) {
+            return 0;
+        }
+
         $connection = $this->manager->getConnection();
         $query = $connection->createQueryBuilder();
         $query->delete($this->getTableName())
             ->where($entity::getPrimaryKeyColumn() . ' = ' . $query->createPositionalParameter($entity->getPrimaryKeyValue()));
 
+        $this->cache->invalidate($entity->getKey());
         $entity->set($entity::getPrimaryKeyColumn(), null);
         $entity->setEntityManager(null);
+        unset($entity);
 
         return $query->executeStatement();
     }
@@ -220,17 +243,19 @@ abstract class Repository
          */
         $entityName = $this->getEntityName();
         $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
-        if (array_key_exists($primaryKeyValue, $this->entities)) {
-            $entity = $this->entities[$primaryKeyValue];
-            $entity->hydrate($data);  // Hydrate with new data
-        } else {
-            $entity = ModelFactory::createModel($this->getEntityName(), $data);
-            $this->entities[$primaryKeyValue] = $entity;
+        $cacheKey = $entityName.$primaryKeyValue;
+        /**
+         * * @var AsEntity $entity
+         */
+        if ($this->cache->has($cacheKey)) {
+            $entity = $this->cache->get($cacheKey);
+            $entity->hydrate($data);
+        }else {
+            $entity = ModelFactory::createModel($entityName, $data);
+            $this->cache->set($entity->getkey(), $entity);
         }
 
-        if (is_subclass_of($entity, AsEntity::class)) {
-            $entity->setEntityManager($this->manager);
-        }
+        $entity->setEntityManager($this->manager);
         return $entity;
     }
 
@@ -247,10 +272,6 @@ abstract class Repository
 
     public function clear(): void
     {
-        foreach ($this->entities as $objet) {
-            $objet->setEntityManager(null);
-            $objet->set($objet::getPrimaryKeyColumn(), null);
-        }
-        $this->entities = [];
+        $this->cache->clear();
     }
 }

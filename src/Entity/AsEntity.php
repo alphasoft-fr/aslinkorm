@@ -41,6 +41,17 @@ abstract class AsEntity extends Model
         return $this;
     }
 
+    final public function has(string $property): bool
+    {
+        $property = static::mapColumnToProperty($property);
+        return array_key_exists($property, $this->attributes);
+    }
+
+    final public function getKey(): string
+    {
+        return static::class . $this->getPrimaryKeyValue();
+    }
+
     public function getModifiedAttributes(): array
     {
         return $this->_modifiedAttributes;
@@ -58,17 +69,66 @@ abstract class AsEntity extends Model
 
     public function setEntityManager(?EntityManager $manager): void
     {
-        $this->__relationCoordinator = $manager ? new EntityRelationCoordinator($manager) : null;
+        if ($manager === null) {
+            $this->__relationCoordinator = null;
+            return;
+        }
+
+        if ($this->__relationCoordinator instanceof EntityRelationCoordinator) {
+            return;
+        }
+
+        $this->__relationCoordinator = new EntityRelationCoordinator($manager);
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?object
+    protected function findPk(string $relatedModel, int $pk, bool $force = true): ?object
     {
-        return $this->__relationCoordinator ? $this->__relationCoordinator->hasOne($relatedModel, $criteria, $force) : null;
+        return $this->__relationCoordinator ? $this->__relationCoordinator->findPk($relatedModel, $pk, $force) : null;
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): ObjectStorage
+    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = false): ?object
     {
-        return $this->__relationCoordinator ? $this->__relationCoordinator->hasMany($relatedModel, $criteria, $force) : new ObjectStorage();
+        if ($this->__relationCoordinator === null) {
+            return null;
+        }
+
+        $attributeKey = md5($relatedModel . json_encode($criteria));
+        if ($force === true || !$this->has($attributeKey)) {
+            $this->set($attributeKey, $this->__relationCoordinator->hasOne($relatedModel, $criteria));
+        }
+        return $this->get($attributeKey);
+    }
+
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = false): ObjectStorage
+    {
+        $attributeKey = md5($relatedModel . json_encode($criteria));
+        if (!$this->has($attributeKey)) {
+            $storage = new ObjectStorage();
+            $this->set($attributeKey, $storage);
+        }
+
+        /**
+         * @var ObjectStorage $storage
+         */
+        $storage = $this->get($attributeKey);
+
+        if ($this->__relationCoordinator === null) {
+            return $storage;
+        }
+
+        if ($force === false && !$storage->isEmpty()) {
+            return $storage;
+        }
+
+        $storage->clear();
+        foreach ($this->__relationCoordinator->hasMany($relatedModel, $criteria) as $object) {
+            if ($storage->offsetExists($object)) {
+                continue;
+            }
+            $storage->attach($object);
+        }
+
+        return $storage;
     }
 
     final static protected function getDefaultAttributes(): array

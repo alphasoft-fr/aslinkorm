@@ -19,42 +19,37 @@ final class EntityRelationCoordinator
         $this->entityManager = $entityManager;
     }
 
-    public function findPk(string $relatedModelClass, int $pk, bool $force = false): ?AsEntity
+    public function findPk(string $relatedModelClass, int $pk, bool $force = false): ?object
     {
         if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
 
         $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
-        if ($force === false) {
-            return $repository->findPkCache($pk);
+        $cache = $this->getEntityManager()->getCache();
+        $cacheKey = $relatedModelClass.$pk;
+        if ($force === false && $cache->has($cacheKey)) {
+            return $cache->get($cacheKey);
         }
         return $repository->findPk($pk);
     }
 
-    public function hasOne(string $relatedModelClass, array $criteria = [], bool $force = false): ?object
+    public function hasOne(string $relatedModelClass, array $criteria = []): ?object
     {
         if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
 
         $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
-        if ($force === false) {
-            return $repository->findOneByCache($criteria);
-        }
         return $repository->findOneBy($criteria);
     }
 
-    public function hasMany(string $relatedModelClass, array $criteria = [], bool $force = false): ObjectStorage
+    public function hasMany(string $relatedModelClass, array $criteria = []): ObjectStorage
     {
         if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
-
         $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
-        if ($force === false) {
-            return $repository->findByCache($criteria);
-        }
         return $repository->findBy($criteria);
     }
 
