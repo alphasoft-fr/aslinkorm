@@ -47,7 +47,7 @@ abstract class AsEntity extends Model
         return array_key_exists($property, $this->attributes);
     }
 
-    final public function getKey(): string
+    final public function _getKey(): string
     {
         return static::class . $this->getPrimaryKeyValue();
     }

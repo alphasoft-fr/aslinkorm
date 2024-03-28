@@ -123,7 +123,7 @@ abstract class Repository
         $lastId = $connection->lastInsertId();
         if ($lastId !== false) {
             $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int) $lastId : $lastId);
-            $this->cache->set($entity->getKey(), $entity);
+            $this->cache->set($entity->_getKey(), $entity);
             $entity->setEntityManager($this->manager);
         }
         return $rows;
@@ -151,7 +151,7 @@ abstract class Repository
         }
         QueryHelper::generateWhereQuery($query, array_merge([$primaryKeyColumn => $entity->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
         $value =  $query->executeStatement();
-        $this->cache->invalidate($entity->getKey());
+        $this->cache->invalidate($entity->_getKey());
         return $value;
     }
 
@@ -166,7 +166,7 @@ abstract class Repository
         $query->delete($this->getTableName())
             ->where($entity::getPrimaryKeyColumn() . ' = ' . $query->createPositionalParameter($entity->getPrimaryKeyValue()));
 
-        $this->cache->invalidate($entity->getKey());
+        $this->cache->invalidate($entity->_getKey());
         $entity->set($entity::getPrimaryKeyColumn(), null);
         $entity->setEntityManager(null);
         unset($entity);
@@ -252,7 +252,7 @@ abstract class Repository
             $entity->hydrate($data);
         }else {
             $entity = ModelFactory::createModel($entityName, $data);
-            $this->cache->set($entity->getkey(), $entity);
+            $this->cache->set($entity->_getKey(), $entity);
         }
 
         $entity->setEntityManager($this->manager);
