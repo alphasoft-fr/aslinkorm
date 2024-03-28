@@ -55,7 +55,7 @@ class EntityManager
         }
 
         if (!isset($this->repositories[$repository])) {
-            $this->repositories[$repository] = new $repository($this, $this->cache);
+            $this->repositories[$repository] = new $repository($this);
         }
         return  $this->repositories[$repository];
     }

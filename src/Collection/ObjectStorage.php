@@ -2,7 +2,9 @@
 
 namespace AlphaSoft\AsLinkOrm\Collection;
 
-class ObjectStorage extends \SplObjectStorage
+use SplObjectStorage;
+
+class ObjectStorage extends SplObjectStorage
 {
 
     public function __construct(array $data = [])
@@ -11,6 +13,35 @@ class ObjectStorage extends \SplObjectStorage
             $this->attach($item);
         }
     }
+
+    public function findPk($pk): ?object
+    {
+        if ($pk === null) {
+            return null;
+        }
+
+        foreach ($this as $object) {
+            if (method_exists($object, 'getId') && $object->getId() === $pk) {
+                return $object;
+            }
+            if (method_exists($object, 'getPrimaryKeyValue') && $object->getPrimaryKeyValue() === $pk) {
+                return $object;
+            }
+        }
+        return null;
+    }
+
+    public function findOneBy(string $method, $value): ?object
+    {
+        foreach ($this as $object) {
+            if (method_exists($object, $method) && $object->$method() === $value) {
+                return $object;
+            }
+        }
+        return null;
+
+    }
+
     /**
      * Finds an object in the collection using a callback.
      *
