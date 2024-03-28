@@ -81,9 +81,17 @@ abstract class AsEntity extends Model
         $this->__relationCoordinator = new EntityRelationCoordinator($manager);
     }
 
-    protected function findPk(string $relatedModel, int $pk, bool $force = true): ?object
+    protected function findPk(string $relatedModel, ?int $pk, bool $force = false): ?object
     {
-        return $this->__relationCoordinator ? $this->__relationCoordinator->findPk($relatedModel, $pk, $force) : null;
+        if ($pk === null) {
+            return null;
+        }
+
+        if ($this->__relationCoordinator === null) {
+            return null;
+        }
+
+        return $this->__relationCoordinator->findPk($relatedModel, $pk, $force);
     }
 
     protected function hasOne(string $relatedModel, array $criteria = [], bool $force = false): ?object
