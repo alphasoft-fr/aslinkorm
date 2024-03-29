@@ -108,7 +108,7 @@ abstract class AsEntity extends Model
         return $this->get($attributeKey);
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $forceRefresh = false): ObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $forceRefresh = true): ObjectStorage
     {
         $attributeKey = md5($relatedModel . json_encode($criteria));
         if (!$this->has($attributeKey)) {
