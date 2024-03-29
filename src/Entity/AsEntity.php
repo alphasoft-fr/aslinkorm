@@ -81,7 +81,7 @@ abstract class AsEntity extends Model
         $this->__relationCoordinator = new EntityRelationCoordinator($manager);
     }
 
-    protected function findPk(string $relatedModel, ?int $pk, bool $force = false): ?object
+    protected function findPk(string $relatedModel, ?int $pk, bool $forceRefresh = false): ?object
     {
         if ($pk === null) {
             return null;
@@ -91,23 +91,24 @@ abstract class AsEntity extends Model
             return null;
         }
 
-        return $this->__relationCoordinator->findPk($relatedModel, $pk, $force);
+        return $this->__relationCoordinator->findPk($relatedModel, $pk, $forceRefresh);
     }
 
-    protected function hasOne(string $relatedModel, array $criteria = [], bool $force = true): ?object
+
+    protected function hasOne(string $relatedModel, array $criteria = [], bool $forceRefresh = true): ?object
     {
         if ($this->__relationCoordinator === null) {
             return null;
         }
 
         $attributeKey = md5($relatedModel . json_encode($criteria));
-        if ($force === true || !$this->has($attributeKey)) {
+        if ($forceRefresh === true || !$this->has($attributeKey)) {
             $this->set($attributeKey, $this->__relationCoordinator->hasOne($relatedModel, $criteria));
         }
         return $this->get($attributeKey);
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $force = true): ObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], bool $forceRefresh = false): ObjectStorage
     {
         $attributeKey = md5($relatedModel . json_encode($criteria));
         if (!$this->has($attributeKey)) {
@@ -124,7 +125,7 @@ abstract class AsEntity extends Model
             return $storage;
         }
 
-        if ($force === false && !$storage->isEmpty()) {
+        if ($forceRefresh === false && !$storage->isEmpty()) {
             return $storage;
         }
 
@@ -167,11 +168,11 @@ abstract class AsEntity extends Model
             });
 
             if (count($columnsFiltered) === 0) {
-                throw new LogicException('At least one primary key is required.');
+                throw new LogicException(static::class.' At least one primary key is required.');
             }
 
             if (count($columnsFiltered) > 1) {
-                throw new LogicException('Only one primary key is allowed.');
+                throw new LogicException( static::class.' Only one primary key is allowed.');
             }
 
             $primaryKey = $columnsFiltered[0];

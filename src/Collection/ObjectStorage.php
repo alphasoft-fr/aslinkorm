@@ -14,6 +14,12 @@ class ObjectStorage extends SplObjectStorage
         }
     }
 
+    /**
+     * Find the object with the given primary key value.
+     *
+     * @param mixed $pk The primary key value to search for.
+     * @return object|null The object with the given primary key value, or null if not found.
+     */
     public function findPk($pk): ?object
     {
         if ($pk === null) {
@@ -31,6 +37,13 @@ class ObjectStorage extends SplObjectStorage
         return null;
     }
 
+    /**
+     * Finds and returns an object based on the specified method and value.
+     *
+     * @param string $method The method to search by
+     * @param mixed $value The value to search for
+     * @return object|null The found object or null if not found
+     */
     public function findOneBy(string $method, $value): ?object
     {
         foreach ($this as $object) {

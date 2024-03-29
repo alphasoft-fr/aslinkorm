@@ -25,6 +25,16 @@ final class User extends AsEntity
         return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()], true);
     }
 
+    public function getLastname(): string
+    {
+        return $this->getString('lastname');
+    }
+
+    public function getFirstname(): string
+    {
+        return $this->getString('firstname');
+    }
+
     static protected function columnsMapping(): array
     {
         return [

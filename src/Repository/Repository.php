@@ -48,33 +48,8 @@ abstract class Repository
      */
     abstract public function getEntityName(): string;
 
-    public function findByCache(array $arguments = [], array $orderBy = [], ?int $limit = null)
-    {
-        $cacheKey = md5('many' . $this->getEntityName() . json_encode($arguments) . json_encode($orderBy) . json_encode($limit));
-        if (!array_key_exists($cacheKey, $this->entities)) {
-            $this->entities[$cacheKey] = $this->findBy($arguments, $orderBy, $limit);
-        }
-        return $this->entities[$cacheKey];
-    }
 
-    public function findOneByCache(array $arguments = [], array $orderBy = []): ?AsEntity
-    {
-        $cacheKey = md5('one' . $this->getEntityName() . json_encode($arguments) . json_encode($orderBy));
-        if (!array_key_exists($cacheKey, $this->entities)) {
-            $this->entities[$cacheKey] = $this->findOneBy($arguments, $orderBy);
-        }
-        return $this->entities[$cacheKey];
-    }
-
-    public function findPkCache(int $pk): ?AsEntity
-    {
-        if (!array_key_exists($pk, $this->entities)) {
-            $this->entities[$pk] = $this->findPk($pk);
-        }
-        return $this->entities[$pk];
-    }
-
-    public function findPk(int $pk): ?AsEntity
+    public function findPk(int $pk): ?object
     {
         /**
          * @var class-string<AsEntity> $entityName
@@ -84,7 +59,7 @@ abstract class Repository
         return $this->findOneBy([$primaryKeyColumn => $pk]);
     }
 
-    public function findOneBy(array $arguments = [], array $orderBy = []): ?AsEntity
+    public function findOneBy(array $arguments = [], array $orderBy = []): ?object
     {
         $query = $this->generateSelectQuery($arguments, $orderBy, null);
         $item = $query->fetchAssociative();
@@ -105,7 +80,7 @@ abstract class Repository
     public function insert(AsEntity $entity): int
     {
         if ($entity->getPrimaryKeyValue() !== null) {
-            throw new \LogicException('Cannot insert an entity with a primary key');
+            throw new \LogicException(  static::class.' Cannot insert an entity with a primary key');
         }
 
         $connection = $this->manager->getConnection();
@@ -132,7 +107,7 @@ abstract class Repository
     public function update(AsEntity $entity, array $arguments = []): int
     {
         if ($entity->getPrimaryKeyValue() === null) {
-            throw new \LogicException('Cannot update an entity without a primary key');
+            throw new \LogicException( static::class.' Cannot update an entity without a primary key');
         }
 
         $query = $this->createQueryBuilder();

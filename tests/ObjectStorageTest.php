@@ -5,6 +5,7 @@ namespace Test\AlphaSoft\AsLinkOrm;
 
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use PHPUnit\Framework\TestCase;
+use Test\AlphaSoft\AsLinkOrm\Model\User;
 
 class ObjectStorageTest extends TestCase
 {
@@ -119,5 +120,40 @@ class ObjectStorageTest extends TestCase
         $objectStorage->attach($object2);
 
         $this->assertFalse($objectStorage->isEmpty());
+    }
+
+    public function testFindPkWithNullPrimaryKey()
+    {
+        $collection = new ObjectStorage();
+        $result = $collection->findPk(null);
+        $this->assertNull($result);
+    }
+
+    public function testFindPkWithNonExistentPrimaryKey()
+    {
+        $collection = new ObjectStorage();
+        $result = $collection->findPk(999);
+        $this->assertNull($result);
+    }
+
+    public function testFindPkWithExistingPrimaryKey()
+    {
+        $collection = new ObjectStorage();
+        $object = new User(['id' => 133]);
+        $collection->attach($object);
+        $result = $collection->findPk(133);
+        $this->assertSame($object, $result);
+    }
+
+    public function testFindOneBy()
+    {
+        $user = new User(['firstname' => 'John', 'lastname' => 'Doe']);
+        $objectStorage = new ObjectStorage();
+        $objectStorage->attach($user);
+        $foundObject = $objectStorage->findOneBy('getFirstname', 'John');
+        $this->assertEquals($user, $foundObject);
+
+        $foundObject = $objectStorage->findOneBy('getNonExistentMethod', 'John');
+        $this->assertNull($foundObject);
     }
 }

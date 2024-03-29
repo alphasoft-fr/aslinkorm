@@ -19,7 +19,7 @@ final class EntityRelationCoordinator
         $this->entityManager = $entityManager;
     }
 
-    public function findPk(string $relatedModelClass, int $pk, bool $force = false): ?object
+    public function findPk(string $relatedModelClass, int $pk, bool $forceRefresh = false): ?object
     {
         if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
@@ -28,7 +28,7 @@ final class EntityRelationCoordinator
         $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
         $cache = $this->getEntityManager()->getCache();
         $cacheKey = $relatedModelClass.$pk;
-        if ($force === false && $cache->has($cacheKey)) {
+        if ($forceRefresh === false && $cache->has($cacheKey)) {
             return $cache->get($cacheKey);
         }
         return $repository->findPk($pk);
