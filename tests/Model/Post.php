@@ -3,6 +3,7 @@
 namespace Test\AlphaSoft\AsLinkOrm\Model;
 
 use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Mapping\JoinColumn;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use Test\AlphaSoft\AsLinkOrm\Repository\PostRepository;
@@ -16,11 +17,16 @@ final class Post extends AsEntity
 
     public function setUser(User $user): self
     {
-        $this->set('user_id', $user->getPrimaryKeyValue());
+        $this->setRelatedOne('user', $user);
         return $this;
     }
 
     public function getUser(): ?User
+    {
+        return $this->getRelatedOne('user');
+    }
+
+    public function getUserHasOneMethod(): ?User
     {
         return $this->hasOne(User::class, ['id' => $this->get('user_id')]);
     }
@@ -30,13 +36,13 @@ final class Post extends AsEntity
         return PostRepository::class;
     }
 
-    static protected function columnsMapping(): array
+    static public function columnsMapping(): array
     {
         return [
             new PrimaryKeyColumn('id'),
             new Column('title'),
             new Column('content'),
-            new Column('user_id'),
+            new JoinColumn('user', 'user_id', 'id',User::class),
         ];
     }
 }

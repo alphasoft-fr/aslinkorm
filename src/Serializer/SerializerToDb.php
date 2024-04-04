@@ -3,6 +3,8 @@
 namespace AlphaSoft\AsLinkOrm\Serializer;
 
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
+use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Types\TypeFactory;
 
 final class SerializerToDb
 {
@@ -26,7 +28,7 @@ final class SerializerToDb
             if (!array_key_exists($property, $attributes)) {
                 continue;
             }
-            $dbData[sprintf('`%s`', $column->getName())] = $attributes[$property];
+            $dbData[sprintf('`%s`', $column->getName())] = $column->convertToDatabase($attributes[$property]);
         }
         return $dbData;
     }

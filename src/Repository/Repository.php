@@ -127,6 +127,7 @@ abstract class Repository
         QueryHelper::generateWhereQuery($query, array_merge([$primaryKeyColumn => $entity->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
         $value =  $query->executeStatement();
         $this->cache->invalidate($entity->_getKey());
+        $entity->clearModifiedAttributes();
         return $value;
     }
 
@@ -211,7 +212,7 @@ abstract class Repository
         return $dbArguments;
     }
 
-    final protected function createModel(array $data): AsEntity
+    final protected function createModel(array $data): object
     {
         /**
          * @var class-string<AsEntity> $entityName
@@ -219,13 +220,16 @@ abstract class Repository
         $entityName = $this->getEntityName();
         $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
         $cacheKey = $entityName.$primaryKeyValue;
-        /**
-         * * @var AsEntity $entity
-         */
         if ($this->cache->has($cacheKey)) {
+            /**
+             * * @var AsEntity $entity
+             */
             $entity = $this->cache->get($cacheKey);
             $entity->hydrate($data);
         }else {
+            /**
+             * * @var AsEntity $entity
+             */
             $entity = ModelFactory::createModel($entityName, $data);
             $this->cache->set($entity->_getKey(), $entity);
         }

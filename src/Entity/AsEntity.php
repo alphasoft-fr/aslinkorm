@@ -2,13 +2,13 @@
 
 namespace AlphaSoft\AsLinkOrm\Entity;
 
-use AlphaSoft\AsLinkOrm\Cache\ColumnCache;
-use AlphaSoft\AsLinkOrm\Cache\PrimaryKeyColumnCache;
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Coordinator\EntityRelationCoordinator;
 use AlphaSoft\AsLinkOrm\EntityManager;
+use AlphaSoft\AsLinkOrm\Mapper\ColumnMapper;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
-use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
+use AlphaSoft\AsLinkOrm\Mapping\JoinColumn;
+use AlphaSoft\AsLinkOrm\Mapping\OneToMany;
 use AlphaSoft\AsLinkOrm\Serializer\SerializerToDb;
 use AlphaSoft\AsLinkOrm\Serializer\SerializerToDbForUpdate;
 use AlphaSoft\DataModel\Model;
@@ -26,14 +26,18 @@ abstract class AsEntity extends Model
     final public function hydrate(array $data): void
     {
         foreach ($data as $property => $value) {
-            parent::set($property, $value);
+            $this->set($property, $value, false);
         }
     }
 
-    final public function set(string $property, $value): Model
+    final public function set(string $property, $value, bool $update = true): Model
     {
         $property = static::mapColumnToProperty($property);
-        if ($value !== $this->getOrNull($property)) {
+        $column = static::getColumnByProperty($property);
+        if ($column) {
+            $value = $column->convertToPHP($value);
+        }
+        if ($update && $value !== $this->getOrNull($property)) {
             $this->_modifiedAttributes[$property] = $value;
         }
         parent::set($property, $value);
@@ -55,6 +59,33 @@ abstract class AsEntity extends Model
     public function getModifiedAttributes(): array
     {
         return $this->_modifiedAttributes;
+    }
+
+    public function clearModifiedAttributes(): void
+    {
+        $this->_modifiedAttributes = [];
+    }
+
+    /**
+     * Convert the object to an array.
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $data = [];
+        foreach ($this->attributes as $property => $value) {
+            $data[$property] = $value;
+            if (is_iterable($value)) {
+                $data[$property] = iterator_to_array($value);
+                continue;
+            }
+
+            if ($value instanceof AsEntity) {
+                $data[$property] = $value->toArray();
+            }
+        }
+        return $data;
     }
 
     final public function toDb(): array
@@ -81,6 +112,100 @@ abstract class AsEntity extends Model
         $this->__relationCoordinator = new EntityRelationCoordinator($manager);
     }
 
+    public function setRelatedOne(string $property, AsEntity $entity): void
+    {
+        $relationColumn = static::getJoinColumn($property);
+        $targetEntity = $relationColumn->getTargetEntity();
+        if ($targetEntity !== get_class($entity)) {
+            throw new LogicException(static::class . " The target entity must be '$targetEntity'.");
+        }
+
+        if ($entity->getPrimaryKeyValue() === null) {
+            throw new LogicException(static::class . " The target entity must have a primary key.");
+        }
+
+        $this->set($relationColumn->getProperty(), $entity->getPrimaryKeyValue());
+        $this->set($relationColumn->getFictiveProperty(), $entity);
+        $this->set($this->getKeyInitString($property), true);
+    }
+
+    public function getRelatedOne(string $property): ?object
+    {
+        if (!$this->has($property)) {
+            throw new LogicException("No relation defined for the property '$property'.");
+        }
+
+        $keyInit = $this->getKeyInitString($property);
+        if ($this->has($keyInit)) {
+            return $this->get($property);
+        }
+
+        $relationColumn = static::getJoinColumn($property);
+        $referencedColumnName = $relationColumn->getReferencedColumnName();
+        $name = $relationColumn->getName();
+        $targetEntity = $relationColumn->getTargetEntity();
+        if (!is_subclass_of($targetEntity, AsEntity::class)) {
+            throw new LogicException(static::class . " The target entity '$targetEntity' must be a subclass of AsEntity.");
+        }
+
+        $primaryKeyColumn = $targetEntity::getPrimaryKeyColumn();
+        if ($primaryKeyColumn !== $referencedColumnName) {
+            throw new LogicException(static::class . " The referenced column '$referencedColumnName' must be the primary key of the target entity '$targetEntity'.");
+        }
+
+        $this->set($property, $this->findPk($targetEntity, $this->get($name)));
+        $this->set($keyInit, true);
+
+        return $this->get($property);
+    }
+
+
+    public function getRelatedMany(string $property): ObjectStorage
+    {
+        if (!$this->has($property)) {
+            throw new LogicException("No OneToMany relation defined for the property '$property'.");
+        }
+
+        $keyInit = $this->getKeyInitString($property);
+        if ($this->has($keyInit)) {
+            return $this->get($property);
+        }
+
+        $storage = $this->get($property);
+        if (!$storage instanceof ObjectStorage) {
+            throw new LogicException(static::class . " The property '$property' must be an instance of ObjectStorage.");
+        }
+
+        $oneToManyColumn = null;
+        foreach (static::getOneToManyRelations() as $oneToManyRelation) {
+            if ($oneToManyRelation->getProperty() === $property) {
+                $oneToManyColumn = $oneToManyRelation;
+                break;
+            }
+        }
+
+        if ($oneToManyColumn === null) {
+            throw new LogicException("No OneToMany relation defined for the property '$property'.");
+        }
+
+        $criteria = [];
+        foreach ($oneToManyColumn->getCriteria() as $referencedColumnName => $value) {
+            $criteria[$referencedColumnName] = $this->has($value) ? $this->get($value) : $value;
+        }
+
+        foreach ($this->hasMany($oneToManyColumn->getTargetEntity(), $criteria) as $object) {
+            if ($storage->offsetExists($object)) {
+                continue;
+            }
+            $storage->attach($object);
+        }
+
+        $this->set($keyInit, true);
+
+        return $storage;
+    }
+
+
     protected function findPk(string $relatedModel, ?int $pk, bool $forceRefresh = false): ?object
     {
         if ($pk === null) {
@@ -95,56 +220,33 @@ abstract class AsEntity extends Model
     }
 
 
-    protected function hasOne(string $relatedModel, array $criteria = [], bool $forceRefresh = true): ?object
+    protected function hasOne(string $relatedModel, array $criteria = []): ?object
     {
         if ($this->__relationCoordinator === null) {
             return null;
         }
 
-        $attributeKey = md5($relatedModel . json_encode($criteria));
-        if ($forceRefresh === true || !$this->has($attributeKey)) {
-            $this->set($attributeKey, $this->__relationCoordinator->hasOne($relatedModel, $criteria));
-        }
-        return $this->get($attributeKey);
+        return $this->__relationCoordinator->hasOne($relatedModel, $criteria);
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = [], bool $forceRefresh = true): ObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = []): ObjectStorage
     {
-        $attributeKey = md5($relatedModel . json_encode($criteria));
-        if (!$this->has($attributeKey)) {
-            $storage = new ObjectStorage();
-            $this->set($attributeKey, $storage);
-        }
-
-        /**
-         * @var ObjectStorage $storage
-         */
-        $storage = $this->get($attributeKey);
-
         if ($this->__relationCoordinator === null) {
-            return $storage;
+            return new ObjectStorage();
         }
 
-        if ($forceRefresh === false && !$storage->isEmpty()) {
-            return $storage;
-        }
-
-        $storage->clear();
-        foreach ($this->__relationCoordinator->hasMany($relatedModel, $criteria) as $object) {
-            if ($storage->offsetExists($object)) {
-                continue;
-            }
-            $storage->attach($object);
-        }
-
-        return $storage;
+        return $this->__relationCoordinator->hasMany($relatedModel, $criteria);
     }
 
     final static protected function getDefaultAttributes(): array
     {
         $attributes = [];
-        foreach (self::getColumns() as $column) {
+        $columns = array_merge(self::getColumns(), self::getOneToManyRelations());
+        foreach ($columns as $column) {
             $attributes[$column->getProperty()] = $column->getDefaultValue();
+            if ($column instanceof JoinColumn) {
+                $attributes[$column->getFictiveProperty()] = null;
+            }
         }
         return $attributes;
     }
@@ -160,26 +262,40 @@ abstract class AsEntity extends Model
 
     final static public function getPrimaryKeyColumn(): string
     {
-        $cache = PrimaryKeyColumnCache::getInstance();
-        if (empty($cache->get(static::class))) {
+        return ColumnMapper::getPrimaryKeyColumn(static::class);
+    }
 
-            $columnsFiltered = array_filter(self::getColumns(), function (Column $column) {
-                return $column instanceof PrimaryKeyColumn;
-            });
+    /**
+     * @return array<JoinColumn>
+     */
+    final static public function getJoinColumns(): array
+    {
+        return ColumnMapper::getJoinColumns(static::class);
+    }
 
-            if (count($columnsFiltered) === 0) {
-                throw new LogicException(static::class.' At least one primary key is required.');
+    final static public function getJoinColumn(string $property): JoinColumn
+    {
+        $relationColumn = null;
+        foreach (static::getJoinColumns() as $joinColumn) {
+            if ($joinColumn->getFictiveProperty() === $property) {
+                $relationColumn = $joinColumn;
+                break;
             }
-
-            if (count($columnsFiltered) > 1) {
-                throw new LogicException( static::class.' Only one primary key is allowed.');
-            }
-
-            $primaryKey = $columnsFiltered[0];
-
-            $cache->set(static::class, $primaryKey);
         }
-        return $cache->get(static::class)->getName();
+
+        if ($relationColumn === null) {
+            throw new LogicException(static::class . " No JoinColumn defined for the property '$property'.");
+        }
+
+        return $relationColumn;
+    }
+
+    /**
+     * @return array<OneToMany>
+     */
+    final static public function getOneToManyRelations(): array
+    {
+        return ColumnMapper::getOneToManyRelations(static::class);
     }
 
     /**
@@ -187,14 +303,20 @@ abstract class AsEntity extends Model
      */
     final static public function getColumns(): array
     {
-        $cache = ColumnCache::getInstance();
-        if (empty($cache->get(static::class))) {
-            $cache->set(static::class, static::columnsMapping());
-        }
-        return $cache->get(static::class);
+        return ColumnMapper::getColumns(static::class);
+    }
+
+    final static public function getColumnByProperty(string $property): ?Column
+    {
+        return ColumnMapper::getColumnByProperty(static::class, $property);
+    }
+
+    private function getKeyInitString(string $property): string
+    {
+        return $property . '__init__';
     }
 
     abstract static public function getRepositoryName(): string;
 
-    abstract static protected function columnsMapping(): array;
+    abstract static public function columnsMapping(): array;
 }

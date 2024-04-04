@@ -107,6 +107,18 @@ class RepositoryTest extends TestCase
          * @var Post $post
          */
         $post = $this->postRepository->findOneBy(['id' => 1]);
+        $relatedUser = $post->getUserHasOneMethod();
+        $this->assertSame(1, $relatedUser->getPrimaryKeyValue());
+    }
+
+    public function testJoinColum()
+    {
+        $this->insertTestData();
+
+        /**
+         * @var Post $post
+         */
+        $post = $this->postRepository->findOneBy(['id' => 1]);
         $relatedUser = $post->getUser();
         $this->assertSame(1, $relatedUser->getPrimaryKeyValue());
     }
@@ -137,6 +149,7 @@ class RepositoryTest extends TestCase
             'isActive' => false,
             'no_mapping_property' => 123,
             'no_mapping_property_2' => 456,
+            'posts' => []
         ], $user->toArray());
 
     }
@@ -155,6 +168,21 @@ class RepositoryTest extends TestCase
 
     }
     public function testHasMany()
+    {
+        $this->insertTestData();
+
+        /**
+         * @var User $user
+         */
+        $user = $this->userRepository->findOneBy(['id' => 1]);
+        $relatedPosts = iterator_to_array($user->getPostsFromHasManyMethod(), false);
+
+        $this->assertCount(1, $relatedPosts);
+        $this->assertInstanceOf(Post::class, $relatedPosts[0]);
+        $this->assertEquals('First Post', $relatedPosts[0]->get('title'));
+    }
+
+    public function testRelatedMany()
     {
         $this->insertTestData();
 
@@ -211,9 +239,11 @@ class RepositoryTest extends TestCase
 
         $user = $this->userRepository->findOneBy(['id' => 1]);
 
-        // Test initial posts count
-        $this->assertCount(1, $user->getPosts());
+        $this->assertCount(1, $user->getPostsFromHasManyMethod());
 
+        /**
+         * @var User $user
+         */
         // Adding a new post
         $newPost = new Post([
             'title' => 'New Post',
@@ -225,17 +255,27 @@ class RepositoryTest extends TestCase
         // Refreshing the user to get the updated posts
         $user = $this->userRepository->findOneBy(['id' => 1]);
 
+        /**
+         * @var Post $post
+         */
+        foreach ($user->getPosts() as $post) {
+            $this->assertEquals(1, $post->getUser()->getPrimaryKeyValue());
+        }
+
         // Test updated posts count
         $this->assertCount(2, $user->getPosts());
+        $this->assertCount(2, $user->getPostsFromHasManyMethod());
 
         // Removing a post
-        $postToRemove = iterator_to_array($user->getPosts(), false)[0];
+        $postToRemove = iterator_to_array($user->getPostsFromHasManyMethod(), false)[0];
         $this->postRepository->delete($postToRemove);
+        $user->getPosts()->remove($postToRemove);
 
         // Refreshing the user to get the updated posts
         $user = $this->userRepository->findOneBy(['id' => 1]);
 
         // Test final posts count
+        $this->assertCount(1, $user->getPostsFromHasManyMethod());
         $this->assertCount(1, $user->getPosts());
     }
 
@@ -285,7 +325,7 @@ class RepositoryTest extends TestCase
 
 
         $this->postRepository->insert($newPost);
-        $posts = $user1->getPosts();
+        $posts = $user1->getPostsFromHasManyMethod();
 
         $this->assertTrue($posts->contains($newPost));
 
@@ -297,7 +337,7 @@ class RepositoryTest extends TestCase
 
         $this->postRepository->insert($newPost2);
 
-        $posts = $user1->getPosts();
+        $posts = $user1->getPostsFromHasManyMethod();
         $this->assertTrue($posts->contains($newPost2));
     }
 
@@ -387,7 +427,23 @@ class RepositoryTest extends TestCase
         $this->insertTestData();
 
         $user = new User();
-        $this->assertTrue($user->getPosts()->count() == 0);
+        $this->assertTrue($user->getPostsFromHasManyMethod()->count() == 0);
+    }
+
+    public function testTypes(): void
+    {
+        $this->insertTestData();
+        $user = $this->manager->getRepository(User::class)->findOneBy([]);
+        $this->assertTrue(is_bool($user->get('isActive')));
+        $this->assertTrue(is_int($user->get('id')));
+    }
+
+    public function testJoinColumn(): void
+    {
+        $this->insertTestData();
+        $user = $this->manager->getRepository(User::class)->findOneBy([]);
+        $this->assertTrue(is_bool($user->get('isActive')));
+        $this->assertTrue(is_int($user->get('id')));
     }
 
 }

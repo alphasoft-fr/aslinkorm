@@ -4,8 +4,10 @@ namespace Test\AlphaSoft\AsLinkOrm\Model;
 
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
+use AlphaSoft\AsLinkOrm\Mapping\OneToMany;
 use AlphaSoft\AsLinkOrm\Mapping\PrimaryKeyColumn;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
+use AlphaSoft\AsLinkOrm\Types\BoolType;
 use Test\AlphaSoft\AsLinkOrm\Repository\UserRepository;
 
 final class User extends AsEntity
@@ -22,7 +24,12 @@ final class User extends AsEntity
 
     public function getPosts(): ObjectStorage
     {
-        return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()], true);
+        return $this->getRelatedMany('posts');
+    }
+
+    public function getPostsFromHasManyMethod(): ObjectStorage
+    {
+        return $this->hasMany(Post::class, ['user_id' => $this->getPrimaryKeyValue()]);
     }
 
     public function getLastname(): string
@@ -35,7 +42,7 @@ final class User extends AsEntity
         return $this->getString('firstname');
     }
 
-    static protected function columnsMapping(): array
+    static public function columnsMapping(): array
     {
         return [
             new PrimaryKeyColumn('id'),
@@ -43,7 +50,8 @@ final class User extends AsEntity
             new Column('lastname'),
             new Column('email'),
             new Column('password'),
-            new Column('isActive', false , 'is_active'),
+            new Column('isActive', false , 'is_active', BoolType::class),
+            new OneToMany('posts', Post::class, ['user_id' => 'id']),
         ];
     }
 }

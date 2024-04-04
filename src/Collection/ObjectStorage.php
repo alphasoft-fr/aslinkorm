@@ -130,10 +130,37 @@ class ObjectStorage extends SplObjectStorage
         return $last;
     }
 
+    /**
+     * Removes all objects from the collection.
+     */
     public function clear(): void
     {
         foreach ($this as $item) {
             $this->detach($item);
         }
+    }
+
+    /**
+     * Adds an object to the collection.
+     *
+     * @param object $object The object to be added.
+     * @return self Returns the updated collection.
+     */
+    public function add(object $object): self
+    {
+        $this->attach($object);
+        return $this;
+    }
+
+    /**
+     * Removes an object from the collection.
+     *
+     * @param object $object The object to be removed.
+     * @return self Returns the updated collection.
+     */
+    public function remove(object $object): self
+    {
+        $this->detach($object);
+        return $this;
     }
 }
