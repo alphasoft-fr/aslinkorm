@@ -11,7 +11,7 @@ final class SqlDebugger
     public function startQuery(string $query, array $params): void
     {
         $this->queries[++$this->currentQuery] = [
-            'query' => $query,
+            'query' => sprintf('[%s] %s', strtok($query, " "), $query),
             'params' => $params,
             'startTime' => microtime(true),
             'executionTime' => 0

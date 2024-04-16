@@ -40,7 +40,8 @@ abstract class AsEntity extends Model
         if ($update && $value !== $this->getOrNull($property)) {
             $this->_modifiedAttributes[$property] = $value;
         }
-        parent::set($property, $value);
+
+        $this->attributes[$property] = $value;
 
         return $this;
     }
@@ -265,29 +266,10 @@ abstract class AsEntity extends Model
         return ColumnMapper::getPrimaryKeyColumn(static::class);
     }
 
-    /**
-     * @return array<JoinColumn>
-     */
-    final static public function getJoinColumns(): array
-    {
-        return ColumnMapper::getJoinColumns(static::class);
-    }
 
     final static public function getJoinColumn(string $property): JoinColumn
     {
-        $relationColumn = null;
-        foreach (static::getJoinColumns() as $joinColumn) {
-            if ($joinColumn->getFictiveProperty() === $property) {
-                $relationColumn = $joinColumn;
-                break;
-            }
-        }
-
-        if ($relationColumn === null) {
-            throw new LogicException(static::class . " No JoinColumn defined for the property '$property'.");
-        }
-
-        return $relationColumn;
+        return ColumnMapper::getJoinColumn(static::class,$property);
     }
 
     /**

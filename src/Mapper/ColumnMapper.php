@@ -67,6 +67,23 @@ final class ColumnMapper
         return $joinColumns;
     }
 
+    static public function getJoinColumn(string $class, string $property): JoinColumn
+    {
+        $relationColumn = null;
+        foreach (self::getJoinColumns($class) as $joinColumn) {
+            if ($joinColumn->getFictiveProperty() === $property) {
+                $relationColumn = $joinColumn;
+                break;
+            }
+        }
+
+        if ($relationColumn === null) {
+            throw new LogicException($class . " No JoinColumn defined for the property '$property'.");
+        }
+
+        return $relationColumn;
+    }
+
     final static public function getOneToManyRelations(string $class): array
     {
         $cache = OneToManyCache::getInstance();

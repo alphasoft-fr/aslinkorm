@@ -4,7 +4,9 @@ namespace AlphaSoft\AsLinkOrm;
 
 use AlphaSoft\AsLinkOrm\Cache\MemcachedCache;
 use AlphaSoft\AsLinkOrm\Debugger\SqlDebugger;
+use AlphaSoft\AsLinkOrm\Driver\DriverInterface;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
+use AlphaSoft\AsLinkOrm\Platform\PlatformInterface;
 use AlphaSoft\AsLinkOrm\Repository\Repository;
 use Doctrine\DBAL\DriverManager;
 
@@ -106,5 +108,14 @@ class EntityManager
     public function getCache(): MemcachedCache
     {
         return $this->cache;
+    }
+
+    public function createDatabasePlatform(): PlatformInterface
+    {
+        $driver = $this->connection->getDriver();
+        if ($driver instanceof DriverInterface) {
+            return $driver->createDatabasePlatform($this->getConnection());
+        }
+        throw new \InvalidArgumentException(get_class($driver) . ' must implement the ' . DriverInterface::class . ' interface in order to create the database platform.');
     }
 }

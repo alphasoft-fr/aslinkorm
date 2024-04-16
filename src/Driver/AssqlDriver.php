@@ -2,11 +2,15 @@
 
 namespace AlphaSoft\AsLinkOrm\Driver;
 
+use AlphaSoft\AsLinkOrm\AsLinkConnection;
+use AlphaSoft\AsLinkOrm\Platform\PlatformInterface;
+use AlphaSoft\AsLinkOrm\Platform\AssqlPlatform;
+use AlphaSoft\AsLinkOrm\Schema\AssqlSchema;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\PDO\Connection;
 use Doctrine\DBAL\Driver\PDO\Exception;
 
-final class CustomDriver extends Driver\AbstractMySQLDriver
+final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInterface
 {
     /**
      * {@inheritdoc}
@@ -33,5 +37,15 @@ final class CustomDriver extends Driver\AbstractMySQLDriver
         }
 
         return new Connection($pdo);
+    }
+
+    public function createDatabasePlatform(AsLinkConnection $connection): PlatformInterface
+    {
+        return new AssqlPlatform($connection, $this->createDatabaseSchema());
+    }
+
+    public function createDatabaseSchema(): AssqlSchema
+    {
+        return new AssqlSchema();
     }
 }

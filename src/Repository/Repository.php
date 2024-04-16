@@ -19,11 +19,6 @@ abstract class Repository
     protected $manager;
 
     /**
-     * @var array<AsEntity>
-     */
-    private $entities = [];
-
-    /**
      * @var MemcachedCache|null
      */
     private $cache;
@@ -145,7 +140,6 @@ abstract class Repository
         $this->cache->invalidate($entity->_getKey());
         $entity->set($entity::getPrimaryKeyColumn(), null);
         $entity->setEntityManager(null);
-        unset($entity);
 
         return $query->executeStatement();
     }

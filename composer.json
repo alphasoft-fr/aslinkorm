@@ -19,7 +19,7 @@
     }
   },
   "require": {
-    "php": ">=7.3",
+    "php": ">=8.2",
     "ext-pdo": "*",
     "alphasoft-fr/data-model": "^2.0",
     "doctrine/dbal": "^3.3",

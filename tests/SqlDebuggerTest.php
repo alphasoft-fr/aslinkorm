@@ -21,7 +21,7 @@ class SqlDebuggerTest extends TestCase
         $sqlDebugger->stopQuery();
         $queries = $sqlDebugger->getQueries();
         $this->assertCount(1, $queries);
-        $this->assertEquals('SELECT * FROM users', $queries[0]['query']);
+        $this->assertEquals('[SELECT] SELECT * FROM users', $queries[0]['query']);
         $this->assertEquals([], $queries[0]['params']);
         $this->assertNotNull($queries[0]['executionTime']);
     }
