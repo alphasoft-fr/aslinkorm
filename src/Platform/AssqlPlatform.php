@@ -4,7 +4,6 @@ namespace AlphaSoft\AsLinkOrm\Platform;
 
 use AlphaSoft\AsLinkOrm\AsLinkConnection;
 use AlphaSoft\AsLinkOrm\Schema\AssqlSchema;
-use AlphaSoft\AsLinkOrm\Schema\SchemaInterface;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 
@@ -25,12 +24,31 @@ class AssqlPlatform implements PlatformInterface
     public function listTables(): array
     {
         $query = $this->connection->executeQuery($this->schema->showTables());
-        return $query->fetchAllAssociative();
+        $rows = $query->fetchAllAssociative();
+        $tables = [];
+        foreach ($rows as $row) {
+            $tables[] = $row['tabname'];
+        }
+        return $tables;
     }
 
     public function listTableColumns(string $tableName): array
     {
-        return [];
+        $query = $this->connection->executeQuery($this->schema->showTableColumns($tableName));
+        $rows = $query->fetchAllAssociative();
+        $columns = [];
+        foreach ($rows as $row) {
+            $columns[] = [
+                'name' => $row['field'],
+                'type' => $row['type'],
+                'null' => $row['null'] == 'YES',
+                'default' => $row['default'] ?? null,
+                'comment' => $row['comment'] ?? null,
+                'extra' => $row['extra'] ?? null,
+                'attributes' => $row['attributes'] ?? null,
+            ];
+        }
+        return $columns;
     }
 
     public function listDatabases(): array

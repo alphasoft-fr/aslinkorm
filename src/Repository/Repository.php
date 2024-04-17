@@ -34,7 +34,14 @@ abstract class Repository
      *
      * @return string The name of the table.
      */
-    abstract public function getTableName(): string;
+     public function getTableName(): string
+    {
+        /**
+         * @var class-string<AsEntity> $entityName
+         */
+        $entityName = $this->getEntityName();
+        return $entityName::getTable();
+    }
 
     /**
      * Get the name of the model associated with this repository.
@@ -215,19 +222,19 @@ abstract class Repository
         $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
         $cacheKey = $entityName.$primaryKeyValue;
         if ($this->cache->has($cacheKey)) {
-            /**
-             * * @var AsEntity $entity
-             */
             $entity = $this->cache->get($cacheKey);
-            $entity->hydrate($data);
         }else {
-            /**
-             * * @var AsEntity $entity
-             */
-            $entity = ModelFactory::createModel($entityName, $data);
+            $entity = new $entityName();
             $this->cache->set($entity->_getKey(), $entity);
         }
 
+        if ($entity instanceof AsEntity) {
+            $entity->hydrate($data);
+        }
+
+        /**
+         * @var object$entity
+         */
         $entity->setEntityManager($this->manager);
         return $entity;
     }

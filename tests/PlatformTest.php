@@ -23,6 +23,7 @@ class PlatformTest extends TestCase
         $this->manager = $manager;
     }
 
+
     public function testCreateTables()
     {
         $platform = $this->manager->createDatabasePlatform();
@@ -47,6 +48,7 @@ class PlatformTest extends TestCase
         $this->assertCount(2, $platform->listTables());
         $this->assertEquals(['user', 'post'], $platform->listTables());
     }
+
 
     public function testDropTable()
     {

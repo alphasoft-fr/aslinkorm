@@ -7,10 +7,6 @@ use Test\AlphaSoft\AsLinkOrm\Model\Post;
 
 class PostRepository extends Repository
 {
-    public function getTableName(): string
-    {
-        return 'post';
-    }
 
     public function getEntityName(): string
     {

@@ -6,6 +6,7 @@ use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Coordinator\EntityRelationCoordinator;
 use AlphaSoft\AsLinkOrm\EntityManager;
 use AlphaSoft\AsLinkOrm\Mapper\ColumnMapper;
+use AlphaSoft\AsLinkOrm\Mapper\EntityMapper;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\AsLinkOrm\Mapping\JoinColumn;
 use AlphaSoft\AsLinkOrm\Mapping\OneToMany;
@@ -13,6 +14,8 @@ use AlphaSoft\AsLinkOrm\Serializer\SerializerToDb;
 use AlphaSoft\AsLinkOrm\Serializer\SerializerToDbForUpdate;
 use AlphaSoft\DataModel\Model;
 use LogicException;
+use ReflectionAttribute;
+use ReflectionClass;
 
 abstract class AsEntity extends Model
 {
@@ -21,7 +24,13 @@ abstract class AsEntity extends Model
      */
     private $__relationCoordinator = null;
 
-    private $_modifiedAttributes = [];
+    private $__modifiedAttributes = [];
+
+    public function __construct(array $data = [])
+    {
+        $this->attributes = static::getDefaultAttributes();
+        $this->hydrate($data);
+    }
 
     final public function hydrate(array $data): void
     {
@@ -30,7 +39,7 @@ abstract class AsEntity extends Model
         }
     }
 
-    final public function set(string $property, $value, bool $update = true): Model
+    final public function set(string $property, $value, bool $update = true): static
     {
         $property = static::mapColumnToProperty($property);
         $column = static::getColumnByProperty($property);
@@ -38,7 +47,7 @@ abstract class AsEntity extends Model
             $value = $column->convertToPHP($value);
         }
         if ($update && $value !== $this->getOrNull($property)) {
-            $this->_modifiedAttributes[$property] = $value;
+            $this->__modifiedAttributes[$property] = $value;
         }
 
         $this->attributes[$property] = $value;
@@ -59,12 +68,12 @@ abstract class AsEntity extends Model
 
     public function getModifiedAttributes(): array
     {
-        return $this->_modifiedAttributes;
+        return $this->__modifiedAttributes;
     }
 
     public function clearModifiedAttributes(): void
     {
-        $this->_modifiedAttributes = [];
+        $this->__modifiedAttributes = [];
     }
 
     /**
@@ -269,7 +278,7 @@ abstract class AsEntity extends Model
 
     final static public function getJoinColumn(string $property): JoinColumn
     {
-        return ColumnMapper::getJoinColumn(static::class,$property);
+        return ColumnMapper::getJoinColumn(static::class, $property);
     }
 
     /**
@@ -293,12 +302,32 @@ abstract class AsEntity extends Model
         return ColumnMapper::getColumnByProperty(static::class, $property);
     }
 
+    static public function getTable(): string
+    {
+        return EntityMapper::getTable(static::class);
+    }
+
+    static public function getRepositoryName(): string
+    {
+        return EntityMapper::getRepositoryName(static::class);
+    }
+
     private function getKeyInitString(string $property): string
     {
         return $property . '__init__';
     }
 
-    abstract static public function getRepositoryName(): string;
 
-    abstract static public function columnsMapping(): array;
+    static public function columnsMapping(): array
+    {
+        $reflector = new ReflectionClass(static::class);
+        $columns = [];
+        foreach ($reflector->getAttributes(Column::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+            $columns[] = $attribute->newInstance();
+        }
+        foreach ($reflector->getAttributes(OneToMany::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
+            $columns[] = $attribute->newInstance();
+        }
+        return $columns;
+    }
 }

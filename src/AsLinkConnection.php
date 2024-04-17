@@ -39,4 +39,9 @@ class AsLinkConnection extends Connection
     {
         return $this->sqlDebugger;
     }
+
+    public function getDataBaseName(): ?string
+    {
+        return $this->getParams()['dbname'] ?? null;
+    }
 }

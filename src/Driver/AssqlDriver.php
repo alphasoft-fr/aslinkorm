@@ -27,7 +27,7 @@ final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInte
 
         try {
             $pdo = new \PDO(
-                $params['constructPdoDsn']($params),
+                $this->resolveDsn($params),
                 $params['user'] ?? '',
                 $params['password'] ?? '',
                 $driverOptions
@@ -37,6 +37,32 @@ final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInte
         }
 
         return new Connection($pdo);
+    }
+
+    private function resolveDsn(array $params): string
+    {
+        $dsn = "assql:";
+        if (isset($params['host']) && $params['host'] !== '') {
+            $dsn .= 'host=' . $params['host'] . ';';
+        }
+
+        if (isset($params['port'])) {
+            $dsn .= 'port=' . $params['port'] . ';';
+        }
+
+        if (isset($params['dbname'])) {
+            $dsn .= 'dbname=' . $params['dbname'] . ';';
+        }
+
+        if (isset($params['unix_socket'])) {
+            $dsn .= 'unix_socket=' . $params['unix_socket'] . ';';
+        }
+
+        if (isset($params['charset'])) {
+            $dsn .= 'charset=' . $params['charset'] . ';';
+        }
+
+        return $dsn;
     }
 
     public function createDatabasePlatform(AsLinkConnection $connection): PlatformInterface

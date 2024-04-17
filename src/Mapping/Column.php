@@ -5,31 +5,19 @@ namespace AlphaSoft\AsLinkOrm\Mapping;
 use AlphaSoft\AsLinkOrm\Types\Type;
 use AlphaSoft\AsLinkOrm\Types\TypeFactory;
 
+#[\Attribute(\Attribute::TARGET_CLASS|\Attribute::IS_REPEATABLE)]
 class Column
 {
-    /**
-     * @var string
-     */
-    private $property;
 
-    private $type;
-
-    /**
-     * @var mixed
-     */
-    private $defaultValue;
-
-    /**
-     * @var string|null
-     */
-    private $name;
-
-     public function __construct(string $property, $defaultValue = null, string $name = null, string $type = 'string')
+     public function __construct(
+         private readonly string $property,
+         private $defaultValue = null,
+         private readonly ?string $name = null,
+         private string $type = 'string',
+         private readonly bool $unique = false,
+         private readonly bool $nullable = false,
+     )
     {
-        $this->property = $property;
-        $this->defaultValue = $defaultValue;
-        $this->name = $name;
-        $this->type = $type;
     }
 
     final public function __toString(): string
@@ -64,6 +52,16 @@ class Column
     {
         $this->type = $type;
         return $this;
+    }
+
+    public function isUnique(): bool
+    {
+        return $this->unique;
+    }
+
+    public function isNullable(): bool
+    {
+        return $this->nullable;
     }
 
     /**

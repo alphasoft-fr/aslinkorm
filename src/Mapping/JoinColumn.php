@@ -6,6 +6,7 @@ use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\Types\IntegerType;
 use ReflectionClass;
 
+#[\Attribute(\Attribute::TARGET_CLASS|\Attribute::IS_REPEATABLE)]
 final class JoinColumn extends Column
 {
     /**

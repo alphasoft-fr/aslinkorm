@@ -36,15 +36,19 @@ class SqlitePlatform implements PlatformInterface
     {
         $query = $this->connection->executeQuery($this->schema->showTableColumns($tableName));
         $rows = $query->fetchAllAssociative();
-        $tables = [];
+        $columns = [];
         foreach ($rows as $row) {
-            $tables[] = [
+            $columns[] = [
                 'name' => $row['name'],
                 'type' => $row['type'],
+                'null' => boolval($row['notnull']) == false,
+                'default' => $row['dflt_value'] ?? null,
+                'comment' => $row['comment'] ?? null,
+                'extra' => $row['extra'] ?? null,
+                'attributes' => $row['attributes'] ?? null,
             ];
         }
-        return $tables;
-
+        return $columns;
     }
 
     public function listDatabases(): array

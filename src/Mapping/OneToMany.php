@@ -4,6 +4,7 @@ namespace AlphaSoft\AsLinkOrm\Mapping;
 
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 
+#[\Attribute(\Attribute::TARGET_CLASS|\Attribute::IS_REPEATABLE)]
 final class OneToMany
 {
     /**

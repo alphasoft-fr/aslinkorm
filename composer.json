@@ -23,6 +23,7 @@
     "ext-pdo": "*",
     "alphasoft-fr/data-model": "^2.0",
     "doctrine/dbal": "^3.3",
+    "symfony/console": "^6.4",
     "ext-json": "*",
     "ext-ctype": "*"
   },
