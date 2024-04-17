@@ -104,8 +104,13 @@ class AssqlPlatform implements PlatformInterface
     {
         if ($this->serverConnection === null) {
             $params = $this->params;
+            $params['wrapperClass'] = get_class($this->connection);
             $params['dbname'] = 'null';
             $this->serverConnection = DriverManager::getConnection($params);
+            $sqlDebugger = $this->connection->getSqlDebugger();
+            if ($sqlDebugger) {
+                $this->serverConnection->setSqlDebugger($sqlDebugger);
+            }
         }
 
         if (!$this->serverConnection->isConnected()) {
