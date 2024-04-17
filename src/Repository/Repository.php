@@ -215,9 +215,6 @@ abstract class Repository
 
     final protected function createModel(array $data): object
     {
-        /**
-         * @var class-string<AsEntity> $entityName
-         */
         $entityName = $this->getEntityName();
         $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
         $cacheKey = $entityName.$primaryKeyValue;
@@ -228,14 +225,14 @@ abstract class Repository
             $this->cache->set($entity->_getKey(), $entity);
         }
 
-        if ($entity instanceof AsEntity) {
+        if (method_exists($entity, 'hydrate')) {
             $entity->hydrate($data);
         }
 
-        /**
-         * @var object$entity
-         */
-        $entity->setEntityManager($this->manager);
+        if (method_exists($entity, 'setEntityManager')) {
+            $entity->setEntityManager($this->manager);
+        }
+        
         return $entity;
     }
 
