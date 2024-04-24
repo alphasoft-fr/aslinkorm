@@ -10,6 +10,7 @@ use AlphaSoft\AsLinkOrm\Helper\QueryHelper;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\DataModel\Factory\ModelFactory;
 use Doctrine\DBAL\Query\QueryBuilder;
+use LogicException;
 
 abstract class Repository
 {
@@ -34,7 +35,7 @@ abstract class Repository
      *
      * @return string The name of the table.
      */
-     public function getTableName(): string
+    public function getTableName(): string
     {
         /**
          * @var class-string<AsEntity> $entityName
@@ -82,7 +83,7 @@ abstract class Repository
     public function insert(AsEntity $entity): int
     {
         if ($entity->getPrimaryKeyValue() !== null) {
-            throw new \LogicException(  static::class.' Cannot insert an entity with a primary key');
+            throw new LogicException(static::class . ' Cannot insert an entity with a primary key');
         }
 
         $connection = $this->manager->getConnection();
@@ -99,7 +100,7 @@ abstract class Repository
         $rows = $query->executeStatement();
         $lastId = $connection->lastInsertId();
         if ($lastId !== false) {
-            $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int) $lastId : $lastId);
+            $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int)$lastId : $lastId);
             $this->cache->set($entity->_getKey(), $entity);
             $entity->setEntityManager($this->manager);
         }
@@ -109,7 +110,7 @@ abstract class Repository
     public function update(AsEntity $entity, array $arguments = []): int
     {
         if ($entity->getPrimaryKeyValue() === null) {
-            throw new \LogicException( static::class.' Cannot update an entity without a primary key');
+            throw new LogicException(static::class . ' Cannot update an entity without a primary key');
         }
 
         $query = $this->createQueryBuilder();
@@ -127,7 +128,7 @@ abstract class Repository
             $query->set($property, $query->createPositionalParameter($value, QueryHelper::typeOfValue($value)));
         }
         QueryHelper::generateWhereQuery($query, array_merge([$primaryKeyColumn => $entity->getPrimaryKeyValue()], $this->mapPropertiesToColumn($arguments)));
-        $value =  $query->executeStatement();
+        $value = $query->executeStatement();
         $this->cache->invalidate($entity->_getKey());
         $entity->clearModifiedAttributes();
         return $value;
@@ -159,20 +160,12 @@ abstract class Repository
      */
     protected function generateSelectQuery(array $arguments = [], array $orderBy = [], ?int $limit = null): QueryBuilder
     {
-        /**
-         * @var class-string<AsEntity> $entityName
-         */
-        $entityName = $this->getEntityName();
-
         $arguments = $this->mapPropertiesToColumn($arguments);
         $orderBy = $this->mapPropertiesToColumn($orderBy);
-        $properties = array_map(function (Column $column) {
-            return sprintf('`%s`', $column->getName());
-        }, $entityName::getColumns());
 
         $query = $this->createQueryBuilder();
         $query
-            ->select(...$properties)
+            ->select(...$this->getProperties())
             ->from($this->getTableName());
         QueryHelper::generateWhereQuery($query, $arguments);
         foreach ($orderBy as $property => $order) {
@@ -192,9 +185,21 @@ abstract class Repository
         return $this->createQueryBuilder()->update($this->getTableName(), $alias);
     }
 
+    /**
+     * Generates a query builder for selecting records from the table.
+     *
+     * @param string|null $alias The alias to be used for the table in the query.
+     * @return QueryBuilder The query builder instance.
+     */
     public function querySelect(string $alias = null): QueryBuilder
     {
-        return $this->createQueryBuilder()->from($this->getTableName(), $alias);
+        $properties = $this->getProperties();
+        if ($alias !== null) {
+            $properties = array_map(fn(string $property) => $alias . '.' . $property, $properties);
+        }
+        return $this->createQueryBuilder()
+            ->select(...$properties)
+            ->from($this->getTableName(), $alias);
     }
 
     final protected function mapPropertiesToColumn(array $arguments): array
@@ -217,10 +222,10 @@ abstract class Repository
     {
         $entityName = $this->getEntityName();
         $primaryKeyValue = $data[$entityName::getPrimaryKeyColumn()];
-        $cacheKey = $entityName.$primaryKeyValue;
+        $cacheKey = $entityName . $primaryKeyValue;
         if ($this->cache->has($cacheKey)) {
             $entity = $this->cache->get($cacheKey);
-        }else {
+        } else {
             $entity = new $entityName();
             $this->cache->set($entity->_getKey(), $entity);
         }
@@ -232,7 +237,7 @@ abstract class Repository
         if (method_exists($entity, 'setEntityManager')) {
             $entity->setEntityManager($this->manager);
         }
-        
+
         return $entity;
     }
 
@@ -244,6 +249,22 @@ abstract class Repository
             $storage->attach($entity);
         }
         return $storage;
+    }
+
+    /**
+     * Get the properties of the entity.
+     *
+     * @return array The properties of the entity.
+     */
+    final protected function getProperties(): array
+    {
+        /**
+         * @var class-string<AsEntity> $entityName
+         */
+        $entityName = $this->getEntityName();
+        return array_map(function (Column $column) {
+            return sprintf('`%s`', $column->getName());
+        }, $entityName::getColumns());
     }
 
 
