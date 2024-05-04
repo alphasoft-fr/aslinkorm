@@ -2,7 +2,7 @@
 
 namespace AlphaSoft\AsLinkOrm\Types;
 
-if (defined('ASLINKORM_DATETIME_FORMAT')) {
+if (!defined('ASLINKORM_DATETIME_FORMAT')) {
     define('ASLINKORM_DATETIME_FORMAT', 'Y-m-d H:i:s');
 }
 
