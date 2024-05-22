@@ -227,7 +227,7 @@ abstract class Repository
             $entity = $this->cache->get($cacheKey);
         } else {
             $entity = new $entityName();
-            $this->cache->set($entity->_getKey(), $entity);
+            $this->cache->set($cacheKey, $entity);
         }
 
         if (method_exists($entity, 'hydrate')) {
