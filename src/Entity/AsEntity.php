@@ -122,6 +122,12 @@ abstract class AsEntity extends Model
         $this->__relationCoordinator = new EntityRelationCoordinator($manager);
     }
 
+
+    public function getEntityManager(): ?EntityManager
+    {
+        return $this->__relationCoordinator?->getEntityManager();
+    }
+
     public function setRelatedOne(string $property, AsEntity $entity): void
     {
         $relationColumn = static::getJoinColumn($property);

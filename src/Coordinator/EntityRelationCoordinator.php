@@ -54,7 +54,7 @@ final class EntityRelationCoordinator
     }
 
 
-    private function getEntityManager(): EntityManager
+    public function getEntityManager(): EntityManager
     {
         return $this->entityManager;
     }
