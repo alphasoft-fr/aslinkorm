@@ -123,7 +123,7 @@ abstract class AsEntity extends Model
     }
 
 
-    public function getEntityManager(): ?EntityManager
+    protected function getEntityManager(): ?EntityManager
     {
         return $this->__relationCoordinator?->getEntityManager();
     }
