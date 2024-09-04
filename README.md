@@ -13,7 +13,7 @@ composer require alphasoft-fr/aslink-orm
 
 ## Requirements
 
-* PHP version 7.3
+* PHP version 8.2
 
 ## Introduction
 

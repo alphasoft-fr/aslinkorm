@@ -36,7 +36,6 @@ class EntityManager
     {
         $params['wrapperClass'] = AsLinkConnection::class;
         $this->connection = DriverManager::getConnection($params);
-        $this->connection->setSqlDebugger(new SqlDebugger());
         $this->unitOfWork = new UnitOfWork();
         $this->cache = new MemcachedCache();
     }
@@ -91,13 +90,13 @@ class EntityManager
             $repository->delete($entity);
             $this->unitOfWork->unsetEntity($entity);
         }
+
+        $this->unitOfWork->clear();
     }
 
     public function clearAll(): void
     {
-        foreach ($this->repositories as $repository) {
-            $repository->clear();
-        }
+        $this->getCache()->clear();
     }
 
     public function getUnitOfWork(): UnitOfWork

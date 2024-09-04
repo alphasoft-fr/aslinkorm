@@ -28,6 +28,7 @@ class ConnectionTest extends TestCase
         ]);
 
         $this->connection = $manager->getConnection();
+        $this->connection->enableDebugger();
         $this->setUpDatabaseSchema();
 
         $this->manager = $manager;
