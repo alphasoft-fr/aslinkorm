@@ -14,10 +14,10 @@ class AsLinkConnection extends Connection
      */
     private ?SqlDebugger $sqlDebugger = null;
 
-    public function enableDebugger(): void
+    public function enableDebugger(SqlDebugger $sqlDebugger = null): void
     {
         if ($this->sqlDebugger === null) {
-            $this->sqlDebugger = new SqlDebugger();
+            $this->sqlDebugger = $sqlDebugger ?? new SqlDebugger();
         }
     }
 

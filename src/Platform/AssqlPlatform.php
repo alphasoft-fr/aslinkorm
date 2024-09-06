@@ -109,7 +109,7 @@ class AssqlPlatform implements PlatformInterface
             $this->serverConnection = DriverManager::getConnection($params);
             $sqlDebugger = $this->connection->getSqlDebugger();
             if ($sqlDebugger) {
-                $this->serverConnection->setSqlDebugger($sqlDebugger);
+                $this->serverConnection->enableDebugger($sqlDebugger);
             }
         }
 
