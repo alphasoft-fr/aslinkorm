@@ -16,6 +16,15 @@ final class QueryHelper
                 $query->andWhere($query->expr()->in($property, $query->createPositionalParameter($value,  Connection::PARAM_STR_ARRAY)));
                 continue;
             }
+            if (is_null($value)) {
+                $query->andWhere($property . ' IS NULL');
+                continue;
+            }
+            if ($value === '!NULL') {
+                $query->andWhere($property . ' IS NOT NULL');
+                continue;
+            }
+
             $query->andWhere($property . ' = ' . $query->createPositionalParameter($value));
         }
     }
