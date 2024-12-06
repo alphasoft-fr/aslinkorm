@@ -36,7 +36,11 @@ final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInte
             throw Exception::new($exception);
         }
 
-        return new Connection($pdo);
+        $cnx =  new Connection($pdo);
+        assql_sethtmlcp('');
+        assql_setdbscp('');
+        
+        return $cnx;
     }
 
     private function resolveDsn(array $params): string
