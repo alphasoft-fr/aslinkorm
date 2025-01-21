@@ -39,7 +39,7 @@ final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInte
         $cnx =  new Connection($pdo);
         assql_sethtmlcp('');
         assql_setdbscp('');
-        
+
         return $cnx;
     }
 
