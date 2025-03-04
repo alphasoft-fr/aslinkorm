@@ -3,12 +3,14 @@
 namespace AlphaSoft\AsLinkOrm\Driver;
 
 use AlphaSoft\AsLinkOrm\AsLinkConnection;
-use AlphaSoft\AsLinkOrm\Platform\PlatformInterface;
 use AlphaSoft\AsLinkOrm\Platform\AssqlPlatform;
+use AlphaSoft\AsLinkOrm\Platform\PlatformInterface;
 use AlphaSoft\AsLinkOrm\Schema\AssqlSchema;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\PDO\Connection;
 use Doctrine\DBAL\Driver\PDO\Exception;
+use PDO;
+use PDOException;
 
 final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInterface
 {
@@ -21,24 +23,26 @@ final class AssqlDriver extends Driver\AbstractMySQLDriver implements DriverInte
     {
         $driverOptions = $params['driverOptions'] ?? [];
 
-        if (! empty($params['persistent'])) {
-            $driverOptions[\PDO::ATTR_PERSISTENT] = true;
+        if (!empty($params['persistent'])) {
+            $driverOptions[PDO::ATTR_PERSISTENT] = true;
         }
 
         try {
-            $pdo = new \PDO(
+            $pdo = new PDO(
                 $this->resolveDsn($params),
                 $params['user'] ?? '',
                 $params['password'] ?? '',
                 $driverOptions
             );
-        } catch (\PDOException $exception) {
+        } catch (PDOException $exception) {
             throw Exception::new($exception);
         }
 
-        $cnx =  new Connection($pdo);
-        assql_sethtmlcp('');
-        assql_setdbscp('');
+        $cnx = new Connection($pdo);
+        if (($params['charset_utf8'] ?? false) === true) {
+            assql_sethtmlcp('');
+            assql_setdbscp('');
+        }
 
         return $cnx;
     }
