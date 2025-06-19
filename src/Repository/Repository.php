@@ -212,6 +212,9 @@ abstract class Repository
 
         foreach ($arguments as $property => $value) {
             $column = $entityName::mapPropertyToColumn($property);
+            $column = ltrim($column, '`');
+            $column = rtrim($column, '`');
+            $column = "`$column`";
             $dbArguments[$column] = $value;
         }
 
