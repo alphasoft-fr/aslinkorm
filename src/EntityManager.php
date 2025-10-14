@@ -9,6 +9,9 @@ use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\Platform\PlatformInterface;
 use AlphaSoft\AsLinkOrm\Repository\Repository;
 use Doctrine\DBAL\DriverManager;
+use PhpDevCommunity\Listener\Event;
+use PhpDevCommunity\Listener\EventDispatcher;
+use PhpDevCommunity\Listener\ListenerProvider;
 
 class EntityManager
 {
@@ -32,17 +35,49 @@ class EntityManager
      */
     private $repositories = [];
 
+    /**
+     * @var EventDispatcher
+     */
+    private $dispatcher;
+
     public function __construct(array $params)
     {
         $params['wrapperClass'] = AsLinkConnection::class;
         $this->connection = DriverManager::getConnection($params);
         $this->unitOfWork = new UnitOfWork();
         $this->cache = new MemcachedCache();
+        $listeners = $params['eventListeners'] ?? [];
+        $listenerProvider = new ListenerProvider();
+        foreach ($listeners as $event => $listener) {
+            if (!is_subclass_of($event, Event::class)) {
+                throw new \InvalidArgumentException(sprintf(
+                    "Invalid event '%s': it must extend %s.",
+                    $event,
+                    Event::class
+                ));
+            }
+
+            if (!is_callable($listener)) {
+                throw new \InvalidArgumentException(sprintf(
+                    "Invalid listener for event '%s': listener must be callable, got %s.",
+                    $event,
+                    is_object($listener) ? get_class($listener) : gettype($listener)
+                ));
+            }
+            $listenerProvider->addListener($event, $listener);
+        }
+        $this->dispatcher = new EventDispatcher($listenerProvider);
+
     }
 
     public function getConnection(): AsLinkConnection
     {
         return $this->connection;
+    }
+
+    public function getDispatcher(): EventDispatcher
+    {
+        return $this->dispatcher;
     }
 
     public function getRepository(string $repository): Repository

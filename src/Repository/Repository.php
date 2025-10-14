@@ -6,6 +6,9 @@ use AlphaSoft\AsLinkOrm\Cache\MemcachedCache;
 use AlphaSoft\AsLinkOrm\Collection\ObjectStorage;
 use AlphaSoft\AsLinkOrm\Entity\AsEntity;
 use AlphaSoft\AsLinkOrm\EntityManager;
+use AlphaSoft\AsLinkOrm\Event\PostCreateEvent;
+use AlphaSoft\AsLinkOrm\Event\PostDeleteEvent;
+use AlphaSoft\AsLinkOrm\Event\PostUpdateEvent;
 use AlphaSoft\AsLinkOrm\Helper\QueryHelper;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
 use AlphaSoft\DataModel\Factory\ModelFactory;
@@ -103,6 +106,7 @@ abstract class Repository
             $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int)$lastId : $lastId);
             $this->cache->set($entity->_getKey(), $entity);
             $entity->setEntityManager($this->manager);
+            $this->manager->getDispatcher()->dispatch(new PostCreateEvent($this->manager, $entity));
         }
         return $rows;
     }
@@ -131,6 +135,7 @@ abstract class Repository
         $value = $query->executeStatement();
         $this->cache->invalidate($entity->_getKey());
         $entity->clearModifiedAttributes();
+        $this->manager->getDispatcher()->dispatch(new PostUpdateEvent($this->manager, $entity, $properties));
         return $value;
     }
 
@@ -145,11 +150,13 @@ abstract class Repository
         $query->delete($this->getTableName())
             ->where($entity::getPrimaryKeyColumn() . ' = ' . $query->createPositionalParameter($entity->getPrimaryKeyValue()));
 
+        $value = $query->executeStatement();
         $this->cache->invalidate($entity->_getKey());
-        $entity->set($entity::getPrimaryKeyColumn(), null);
         $entity->setEntityManager(null);
 
-        return $query->executeStatement();
+        $this->manager->getDispatcher()->dispatch(new PostDeleteEvent($this->manager, $entity));
+        $entity->set($entity::getPrimaryKeyColumn(), null);
+        return $value;
     }
 
     /**

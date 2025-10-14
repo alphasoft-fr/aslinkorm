@@ -68,7 +68,11 @@ class SqliteSchema implements SchemaInterface
 
     public function dropColumn(string $tableName, string $columnName): string
     {
-        return sprintf('ALTER TABLE %s DROP %s', $tableName, $columnName);
+        if (!$this->supportsDropColumn()) {
+            throw new \LogicException(sprintf("The method '%s' is not supported with SQLite versions older than 3.35.0.", __METHOD__));
+        }
+
+        return sprintf('ALTER TABLE %s DROP COLUMN %s', $tableName, $columnName);
     }
 
     public function renameColumn(string $tableName, string $oldColumnName, string $newColumnName): string
@@ -105,4 +109,10 @@ class SqliteSchema implements SchemaInterface
     {
         return 'Y-m-d';
     }
+
+    public function supportsDropColumn(): bool
+    {
+        return \SQLite3::version()['versionString'] >= '3.35.0';
+    }
+
 }
