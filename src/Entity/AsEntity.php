@@ -50,6 +50,10 @@ abstract class AsEntity extends Model
             $this->__modifiedAttributes[$property] = $value;
         }
 
+        if ($update === false && isset($this->__modifiedAttributes[$property])) {
+            unset($this->__modifiedAttributes[$property]);
+        }
+
         $this->attributes[$property] = $value;
 
         return $this;
