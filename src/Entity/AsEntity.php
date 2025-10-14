@@ -46,7 +46,7 @@ abstract class AsEntity extends Model
         if ($column) {
             $value = $column->convertToPHP($value);
         }
-        if ($update && $value !== $this->getOrNull($property)) {
+        if ($update && $value != $this->get($property)) {
             $this->__modifiedAttributes[$property] = $value;
         }
 
