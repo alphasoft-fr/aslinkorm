@@ -106,6 +106,7 @@ abstract class Repository
             $entity->set($primaryKeyColumn, ctype_digit($lastId) ? (int)$lastId : $lastId);
             $this->cache->set($entity->_getKey(), $entity);
             $entity->setEntityManager($this->manager);
+            $entity->clearModifiedAttributes();
             $this->manager->getDispatcher()->dispatch(new PostCreateEvent($this->manager, $entity));
         }
         return $rows;
@@ -154,8 +155,9 @@ abstract class Repository
         $this->cache->invalidate($entity->_getKey());
         $entity->setEntityManager(null);
 
+        $entity->clearModifiedAttributes();
         $this->manager->getDispatcher()->dispatch(new PostDeleteEvent($this->manager, $entity));
-        $entity->set($entity::getPrimaryKeyColumn(), null);
+        $entity->set($entity::getPrimaryKeyColumn(), null, false);
         return $value;
     }
 
