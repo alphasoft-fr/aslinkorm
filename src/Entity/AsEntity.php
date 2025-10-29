@@ -255,7 +255,7 @@ abstract class AsEntity extends Model
             return new ObjectStorage();
         }
 
-        return $this->__relationCoordinator->hasMany($relatedModel, $criteria);
+        return $this->__relationCoordinator->hasMany($relatedModel, $criteria, $orderBy);
     }
 
     final static protected function getDefaultAttributes(): array
