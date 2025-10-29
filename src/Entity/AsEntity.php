@@ -180,7 +180,7 @@ abstract class AsEntity extends Model
     }
 
 
-    public function getRelatedMany(string $property): ObjectStorage
+    public function getRelatedMany(string $property, array $orderBy = []): ObjectStorage
     {
         if (!$this->has($property)) {
             throw new LogicException("No OneToMany relation defined for the property '$property'.");
@@ -213,7 +213,7 @@ abstract class AsEntity extends Model
             $criteria[$referencedColumnName] = $this->has($value) ? $this->get($value) : $value;
         }
 
-        foreach ($this->hasMany($oneToManyColumn->getTargetEntity(), $criteria) as $object) {
+        foreach ($this->hasMany($oneToManyColumn->getTargetEntity(), $criteria, $orderBy) as $object) {
             if ($storage->offsetExists($object)) {
                 continue;
             }
@@ -249,7 +249,7 @@ abstract class AsEntity extends Model
         return $this->__relationCoordinator->hasOne($relatedModel, $criteria);
     }
 
-    protected function hasMany(string $relatedModel, array $criteria = []): ObjectStorage
+    protected function hasMany(string $relatedModel, array $criteria = [], array $orderBy = []): ObjectStorage
     {
         if ($this->__relationCoordinator === null) {
             return new ObjectStorage();

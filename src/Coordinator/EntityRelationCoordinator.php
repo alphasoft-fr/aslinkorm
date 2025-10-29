@@ -44,13 +44,13 @@ final class EntityRelationCoordinator
         return $repository->findOneBy($criteria);
     }
 
-    public function hasMany(string $relatedModelClass, array $criteria = []): ObjectStorage
+    public function hasMany(string $relatedModelClass, array $criteria = [], array $orderBy = []): ObjectStorage
     {
         if (!is_subclass_of($relatedModelClass, AsEntity::class)) {
             throw new \LogicException("The related model '$relatedModelClass' must be a subclass of AsEntity.");
         }
         $repository = $this->getEntityManager()->getRepository($relatedModelClass::getRepositoryName());
-        return $repository->findBy($criteria);
+        return $repository->findBy($criteria, $orderBy);
     }
 
 

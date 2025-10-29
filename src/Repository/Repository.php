@@ -11,7 +11,6 @@ use AlphaSoft\AsLinkOrm\Event\PostDeleteEvent;
 use AlphaSoft\AsLinkOrm\Event\PostUpdateEvent;
 use AlphaSoft\AsLinkOrm\Helper\QueryHelper;
 use AlphaSoft\AsLinkOrm\Mapping\Column;
-use AlphaSoft\DataModel\Factory\ModelFactory;
 use Doctrine\DBAL\Query\QueryBuilder;
 use LogicException;
 
